@@ -1,10 +1,24 @@
 import mysql from "mysql2/promise";
 import { shards } from "./shardUtils.js";
 
-const dbConnection = {
-  1: await mysql.createConnection(shards[1]),
-  2: await mysql.createConnection(shards[2]),
-  3: await mysql.createConnection(shards[3]),
+let connections;
+
+export const getDbConnections = () => {
+  if (!connections) {
+    throw new Error("DB가 연결되지 않은 상태에서 DB를 조회 했습니다");
+  } else {
+    return connections;
+  }
 };
 
-export default dbConnection;
+export const makeDbConnect = async () => {
+  connections = {};
+  for (const [key, config] of Object.entries(shards)) {
+    try {
+      connections[key] = await mysql.createConnection(config);
+      console.log(`DB 연결 ${key} 완료`);
+    } catch (error) {
+      console.error(`DB 연결 ${key} 중 오류 발생:`, error);
+    }
+  }
+};
