@@ -4,17 +4,24 @@
  * @returns
  */
 import config from "../config/config.js";
+import { DbConnections } from "./connect.js";
 
+/**
+ * DB로 보내는 ID값과 조회할때 사용하는 ID값은 항상 같아야 합니다
+ * @param {*} id
+ * @returns
+ */
 export const getShard = (id) => {
+  const connections = DbConnections();
   let total = 0;
   for (let char of id) {
     total += char.charCodeAt(0); // 문자를 아스키 코드로 변경
   }
-  return total % 3;
+  return connections[total % Object.keys(connections).length];
 };
 
 export const shards = {
-  1: {
+  0: {
     host: config.SHARDS[1].host,
     user: config.SHARDS[1].user,
     password: config.SHARDS[1].password,
@@ -22,7 +29,7 @@ export const shards = {
     port: config.SHARDS[1].port,
     connectTimeout: 10000,
   },
-  2: {
+  1: {
     host: config.SHARDS[2].host,
     user: config.SHARDS[2].user,
     password: config.SHARDS[2].password,
@@ -30,7 +37,7 @@ export const shards = {
     port: config.SHARDS[2].port,
     connectTimeout: 10000,
   },
-  3: {
+  2: {
     host: config.SHARDS[3].host,
     user: config.SHARDS[3].user,
     password: config.SHARDS[3].password,

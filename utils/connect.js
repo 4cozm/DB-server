@@ -15,7 +15,11 @@ export const makeDbConnect = async () => {
   connections = {};
   for (const [key, config] of Object.entries(shards)) {
     try {
-      connections[key] = await mysql.createConnection(config);
+      connections[key] = {
+        game: await mysql.createConnection({ ...config, database: "GAME_DB" }),
+        user: await mysql.createConnection({ ...config, database: "USER_DB" }),
+        error: await mysql.createConnection({ ...config, database: "ERROR_DB" }),
+      };
       console.log(`DB 연결 ${key} 완료`);
     } catch (error) {
       console.error(`DB 연결 ${key} 중 오류 발생:`, error);
