@@ -54,7 +54,10 @@ export const updateUserLogin = async (req, res) => {
       res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
     const shard = getShard(player_id);
-    await shard.user.query(SQL_QUERIES.UPDATE_USER_LOGIN, [player_id]);
+    const [rows] = await shard.user.query(SQL_QUERIES.UPDATE_USER_LOGIN, [player_id]);
+    if (rows.affectedRows === 0) {
+      res.status(404).json({ errorMessage: `Player ID ${player_id}를 찾지 못했습니다` });
+    }
     res.status(200).json({ message: "마지막 로그인 시간 업데이트 성공" });
   } catch (error) {
     console.error(error);
