@@ -1,37 +1,57 @@
-import fs from 'fs/promises';
-
+import fs from "fs/promises";
 
 const readSQLFile = async (filePath) => {
   try {
-    const data = await fs.readFile(filePath, 'utf8');
+    const data = await fs.readFile(filePath, "utf8");
     return data;
   } catch (err) {
-    console.error(`마이그레이션 오류:파일 읽기 실패 ${filePath}`, err);
+    console.error(`파일 읽기 실패 ${filePath}`, err);
     throw err;
   }
 };
 
-export const resetAllData = async (connection) => {
-
-  const dropDatabaseSQL = `
-  DROP DATABASE IF EXISTS USER_DB;
-  DROP DATABASE IF EXISTS GAME_DB;
-  DROP DATABASE IF EXISTS ERROR_DB;
-  `;
+const executeQueries = async (connection, filePath) => {
   try {
-    await connection.query(dropDatabaseSQL);
+    // SQL 파일에서 쿼리 읽기
+    const sql = await readSQLFile(filePath);
 
-    const createUserDatabaseSQL = await readSQLFile('./sql/createUserDatabase.sql');
-    const createGameDatabaseSQL = await readSQLFile('./sql/createGameDatabase.sql');
-    const createErrorDatabaseSQL = await readSQLFile('./sql/createErrorDatabase.sql');
+    // 세미콜론으로 쿼리 분리
+    const queries = sql.split(";").filter((query) => query.trim());
 
-    await connection.query(createUserDatabaseSQL);
-    await connection.query(createGameDatabaseSQL);
-    await connection.query(createErrorDatabaseSQL);
-
-    console.log(`데이터 마이그레이션 성공 샤드:${shard}번`);
+    // 각 쿼리 실행
+    for (const query of queries) {
+      if (query) {
+        // 빈 쿼리 방지
+        await connection.query(query);
+      }
+    }
   } catch (error) {
-    console.error(`마이그레이션 중 에러 발생 샤드:${shard}번`);
+    console.error(`쿼리 실행 중 오류 발생: ${error.message}`);
+    throw error;
   }
 };
 
+export const resetAllData = async (connection) => {
+  const dropDatabaseSQL = [
+    "DROP DATABASE IF EXISTS USER_DB;",
+    "DROP DATABASE IF EXISTS GAME_DB;",
+    "DROP DATABASE IF EXISTS ERROR_DB;",
+  ];
+  try {
+    await connection.beginTransaction();
+    for (const sql of dropDatabaseSQL) {
+      await connection.query(sql);
+    }
+    await connection.commit();
+
+    await connection.beginTransaction();
+    await executeQueries(connection, "./utils/migration/sql/createUserDatabase.sql");
+    await executeQueries(connection, "./utils/migration/sql/createGameDatabase.sql");
+    await executeQueries(connection, "./utils/migration/sql/createErrorDatabase.sql");
+    await connection.commit();
+
+    console.log(`데이터 마이그레이션 성공`);
+  } catch (error) {
+    throw new Error(`마이그레이션 중 에러 발생:${error}`);
+  }
+};
