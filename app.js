@@ -5,12 +5,13 @@ import { makeDbConnect } from "./utils/connect.js";
 const app = express();
 const PORT = 3000;
 const router = express.Router();
-router.get("/", () => {
-  alert("hello");
+router.get("/", (req, res) => {
+  console.log("hello");
+  res.send("Hello World!");
 });
 
 app.use(express.json());
-
+app.use("/", router);
 app.use("/api/db", dbRouter);
 
 app.listen(PORT, () => {
