@@ -3,7 +3,7 @@ import { shards } from "./shardUtils.js";
 
 let connections;
 
-export const getDbConnections = () => {
+export const DbConnections = () => {
   if (!connections) {
     throw new Error("DB가 연결되지 않은 상태에서 DB를 조회 했습니다");
   } else {

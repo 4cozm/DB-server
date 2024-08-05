@@ -1,4 +1,3 @@
-import mysql from 'mysql2/promise';
 import fs from 'fs/promises';
 
 
@@ -12,8 +11,7 @@ const readSQLFile = async (filePath) => {
   }
 };
 
-export const resetAllData = async (shard) => {
-  const connection = await mysql.createConnection(shard);
+export const resetAllData = async (connection) => {
 
   const dropDatabaseSQL = `
   DROP DATABASE IF EXISTS USER_DB;
@@ -34,8 +32,6 @@ export const resetAllData = async (shard) => {
     console.log(`데이터 마이그레이션 성공 샤드:${shard}번`);
   } catch (error) {
     console.error(`마이그레이션 중 에러 발생 샤드:${shard}번`);
-  } finally {
-    await connection.end();
   }
 };
 
