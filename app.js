@@ -2,11 +2,15 @@ import express from "express";
 import dbRouter from "./router/dbRouter.js";
 import { makeDbConnect } from "./utils/connect.js";
 
-
 const app = express();
 const PORT = 3000;
+const router = express.Router();
+router.get("/", () => {
+  alert("hello");
+});
 
 app.use(express.json());
+
 app.use("/api/db", dbRouter);
 
 app.listen(PORT, () => {
