@@ -1,8 +1,5 @@
 import { CloudWatchClient, GetMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 
-import dotenv from "dotenv"; // 나중에 삭제
-dotenv.config();
-
 const client = new CloudWatchClient({ region: "ap-northeast-2" });
 export class ShardData {
   constructor(shardName) {
@@ -48,7 +45,7 @@ export class ShardData {
       const metricData = data.MetricDataResults[0];
       if (metricData.Values.length > 0) {
         const mostRecentTimestampIndex = metricData.Timestamps.length - 1;
-        const mostRecentValue = Math.floor(metricData.Values[mostRecentTimestampIndex]);
+        const mostRecentValue = metricData.Values[mostRecentTimestampIndex];
         this.cpuUsage = mostRecentValue;
         console.log(`CPU 사용량 ${this.shardName}: ${mostRecentValue}%`);
         return mostRecentValue;
@@ -119,7 +116,6 @@ export class ShardData {
 
   // 변환 방식 변경시 사용할 예정
   bytesToMB(bytes) {
-    return Math.round(bytes / (1024 * 1024));
+    return bytes / (1024 * 1024);
   }
 }
-

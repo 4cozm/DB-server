@@ -30,7 +30,7 @@ export const makeDbConnect = async () => {
         status: shardData,
       };
 
-      console.log(`${config.database} 완료`);
+      console.log(`${config.database}연결 완료`);
     } catch (error) {
       console.error(`${config.database} 중 오류 발생:`, error);
     }

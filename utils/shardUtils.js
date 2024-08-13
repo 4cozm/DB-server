@@ -6,13 +6,10 @@ import { DbConnections } from "./connect.js";
  * @param {*} id
  * @returns
  */
-export const getShard = (id) => {
+export const getShard = () => {
   const connections = DbConnections();
-  for (let i = 0; i < connections; i++) {
-    console.log(connections[i]);
-  }
+  
 };
-
 
 export const shards = {
   0: {
