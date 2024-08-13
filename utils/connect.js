@@ -1,5 +1,6 @@
 import mysql from "mysql2/promise";
 import { shards } from "./shardUtils.js";
+import { ShardData } from "./cloudWatch.js";
 
 let connections;
 
@@ -15,14 +16,23 @@ export const makeDbConnect = async () => {
   connections = {};
   for (const [key, config] of Object.entries(shards)) {
     try {
+      const gameConnection = await mysql.createConnection({ ...config, database: "GAME_DB" });
+      const userConnection = await mysql.createConnection({ ...config, database: "USER_DB" });
+      const errorConnection = await mysql.createConnection({ ...config, database: "ERROR_DB" });
+
+      const shardData = new ShardData(config.database);
+      await shardData.initialize();
+
       connections[key] = {
-        game: await mysql.createConnection({ ...config, database: "GAME_DB" }),
-        user: await mysql.createConnection({ ...config, database: "USER_DB" }),
-        error: await mysql.createConnection({ ...config, database: "ERROR_DB" }),
+        game: gameConnection,
+        user: userConnection,
+        error: errorConnection,
+        status: shardData,
       };
-      console.log(`DB 연결 ${key} 완료`);
+
+      console.log(`${config.database} 완료`);
     } catch (error) {
-      console.error(`DB 연결 ${key} 중 오류 발생:`, error);
+      console.error(`${config.database} 중 오류 발생:`, error);
     }
   }
 };

@@ -1,8 +1,3 @@
-/**
- * 각 DB 테이블의 ID값을 넣어서 이를 기반으로 저장 공간을 구분
- * @param {*} id
- * @returns
- */
 import config from "../config/config.js";
 import { DbConnections } from "./connect.js";
 
@@ -13,12 +8,11 @@ import { DbConnections } from "./connect.js";
  */
 export const getShard = (id) => {
   const connections = DbConnections();
-  let total = 0;
-  for (let char of id) {
-    total += char.charCodeAt(0); // 문자를 아스키 코드로 변경
+  for (let i = 0; i < connections; i++) {
+    console.log(connections[i]);
   }
-  return connections[total % Object.keys(connections).length];
 };
+
 
 export const shards = {
   0: {

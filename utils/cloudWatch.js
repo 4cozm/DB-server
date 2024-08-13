@@ -3,78 +3,123 @@ import { CloudWatchClient, GetMetricDataCommand } from "@aws-sdk/client-cloudwat
 import dotenv from "dotenv"; // 나중에 삭제
 dotenv.config();
 
-export let metricLastCheck;
-
 const client = new CloudWatchClient({ region: "ap-northeast-2" });
-
-/**
- * 샤드에 대한 이름을 삽입시 CPU 사용량과 남은 저장공간을 반환
- * @param {String} shard name
- */
-export const getMetrics = async (shard) => {
-  try {
-    const command = new GetMetricDataCommand({
-      MetricDataQueries: [
-        {
-          Id: "m1",
-          MetricStat: {
-            Metric: {
-              Namespace: "AWS/RDS",
-              MetricName: "CPUUtilization",
-              Dimensions: [
-                {
-                  Name: "DBInstanceIdentifier",
-                  Value: shard,
-                },
-              ],
-            },
-            Period: 60,
-            Stat: "Average",
-          },
-          ReturnData: true,
-        },
-        {
-          Id: "freeStorageSpace",
-          MetricStat: {
-            Metric: {
-              Namespace: "AWS/RDS",
-              MetricName: "FreeStorageSpace",
-              Dimensions: [
-                {
-                  Name: "DBInstanceIdentifier",
-                  Value: "shard-1", // 실제 RDS 인스턴스 ID로 변경
-                },
-              ],
-            },
-            Period: 60 * 60, // 1시간 간격으로 데이터 집계
-            Stat: "Average",
-          },
-          ReturnData: true,
-        },
-      ],
-      StartTime: new Date(Date.now() - 3600 * 1000), // 1 hour ago
-      EndTime: new Date(),
-    });
-
-    const data = await client.send(command);
-    const metricData = data.MetricDataResults[0]; // 첫 번째 쿼리 결과
-    if (metricData.Values.length > 0) {
-      const mostRecentValue = metricData.Values[mostRecentTimestampIndex];
-
-      console.log(mostRecentValue);
-    } else {
-      console.log("DB상태 기록이 없습니다");
-    }
-    const freeStorage = data.MetricDataResults[1];
-    if (freeStorage.Values.length > 0) {
-      console.log(bytesToMB(freeStorage.Values[0]));
-    }
-    lastCheck = Date.now();
-  } catch (error) {
-    console.error("에러 발생", error);
+export class ShardData {
+  constructor(shardName) {
+    this.shardName = shardName;
+    this.lastAccessed = Date.now(); // 마지막 조회일자
+    this.cpuUsage; // CPU 사용량
+    this.remainingStorage; // 남은 저장 공간
   }
-};
 
-const bytesToMB = (bytes) => {
-  return Math.round(bytes / (1024 * 1024));
-};
+  async initialize() {
+    await this.updateCpuUsage();
+    await this.updateRemainingStorage();
+  }
+
+  async updateCpuUsage() {
+    try {
+      const command = new GetMetricDataCommand({
+        MetricDataQueries: [
+          {
+            Id: "m1",
+            MetricStat: {
+              Metric: {
+                Namespace: "AWS/RDS",
+                MetricName: "CPUUtilization",
+                Dimensions: [
+                  {
+                    Name: "DBInstanceIdentifier",
+                    Value: this.shardName,
+                  },
+                ],
+              },
+              Period: 60,
+              Stat: "Average",
+            },
+            ReturnData: true,
+          },
+        ],
+        StartTime: new Date(Date.now() - 3600 * 1000),
+        EndTime: new Date(),
+      });
+
+      const data = await client.send(command);
+      const metricData = data.MetricDataResults[0];
+      if (metricData.Values.length > 0) {
+        const mostRecentTimestampIndex = metricData.Timestamps.length - 1;
+        const mostRecentValue = Math.floor(metricData.Values[mostRecentTimestampIndex]);
+        this.cpuUsage = mostRecentValue;
+        console.log(`CPU 사용량 ${this.shardName}: ${mostRecentValue}%`);
+        return mostRecentValue;
+      } else {
+        console.log("CPU 기록을 불러오는데 실패했습니다.");
+        return null;
+      }
+    } catch (error) {
+      console.error("에러 발생", error);
+      return null;
+    }
+  }
+
+  // 남은 저장 공간을 업데이트하는 메서드
+  async updateRemainingStorage() {
+    try {
+      const command = new GetMetricDataCommand({
+        MetricDataQueries: [
+          {
+            Id: "freeStorageSpace",
+            MetricStat: {
+              Metric: {
+                Namespace: "AWS/RDS",
+                MetricName: "FreeStorageSpace",
+                Dimensions: [
+                  {
+                    Name: "DBInstanceIdentifier",
+                    Value: this.shardName,
+                  },
+                ],
+              },
+              Period: 60 * 60, // 1시간 간격으로 데이터 집계
+              Stat: "Average",
+            },
+            ReturnData: true,
+          },
+        ],
+        StartTime: new Date(Date.now() - 3600 * 1000),
+        EndTime: new Date(),
+      });
+
+      const data = await client.send(command);
+      const freeStorage = data.MetricDataResults[0];
+      if (freeStorage.Values.length > 0) {
+        const result = this.bytesToMB(freeStorage.Values[0]);
+        this.remainingStorage = result;
+        console.log(`남은 저장공간 ${this.shardName}: ${result} MB`);
+
+        return result;
+      } else {
+        console.error("저장 공간에 대한 조회 실패");
+        return null;
+      }
+    } catch (error) {
+      console.error("에러 발생", error);
+      return null;
+    }
+  }
+
+  getShardData() {
+    return {
+      shardName: this.shardName,
+      lastAccessed: this.lastAccessed,
+      cpuUsage: this.cpuUsage,
+      remainingStorage: this.remainingStorage,
+    };
+  }
+
+  // 변환 방식 변경시 사용할 예정
+  bytesToMB(bytes) {
+    return Math.round(bytes / (1024 * 1024));
+  }
+}
+
