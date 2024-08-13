@@ -8,7 +8,51 @@ import { DbConnections } from "./connect.js";
  */
 export const getShard = () => {
   const connections = DbConnections();
-  
+  const shards = checkUpdateTime(connections);
+  return selectBestShard(shards);
+};
+
+const checkUpdateTime = (connections) => {
+  const shards = {};
+  Object.keys(connections).forEach(async (key) => {
+    if (Date.now - connections[key].status.getShardData().lastUpdate >= 60000) {
+      //최근 1분간 조회 했다면 생략
+      await connections[key].status.updateShard();
+    }
+    shards[key] = connections[key].status.getShardData();
+  });
+  return shards;
+};
+
+const selectBestShard = (shards) => {
+  if (Object.keys(shards).length <= 0) {
+    throw new Error("샤드의 정보가 존재하지 않습니다");
+  }
+  let result;
+  Object.keys(shards).forEach((key) => {
+    const shard = shards[key];
+
+    let biggestStorage = 0;
+    if (shard.remainingStorage > biggestStorage) {
+      biggestStorage = shard.remainingStorage;
+      result = shard;
+    }
+  });
+
+  if (result.cpu > 80) {
+    console.log("cpu 과부하로 인해 CPU 점유율이 가장 낮은곳에 저장합니다");
+
+    Object.keys(shards).forEach((key) => {
+      const shard = shards[key];
+      let result;
+      let lessUsageCpu;
+      if (shard.cpuUsage > lessUsageCpu) {
+        lessUsageCpu = shard.cpuUsage;
+        result = shard;
+      }
+    });
+  }
+  return result.shardName;
 };
 
 export const shards = {

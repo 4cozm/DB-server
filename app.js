@@ -20,6 +20,5 @@ app.use("/api/user", userRouter);
 app.listen(PORT, async () => {
   await makeDbConnect();
   console.log("DB서버 시작됨 :", PORT);
-
-  getShard();
+  console.log(getShard());
 });

@@ -4,14 +4,15 @@ const client = new CloudWatchClient({ region: "ap-northeast-2" });
 export class ShardData {
   constructor(shardName) {
     this.shardName = shardName;
-    this.lastAccessed = Date.now(); // 마지막 조회일자
     this.cpuUsage; // CPU 사용량
     this.remainingStorage; // 남은 저장 공간
+    this.lastUpdate;
   }
 
-  async initialize() {
+  async shardUpdate() {
     await this.updateCpuUsage();
     await this.updateRemainingStorage();
+    this.lastUpdate = Date.now();
   }
 
   async updateCpuUsage() {
@@ -47,7 +48,6 @@ export class ShardData {
         const mostRecentTimestampIndex = metricData.Timestamps.length - 1;
         const mostRecentValue = metricData.Values[mostRecentTimestampIndex];
         this.cpuUsage = mostRecentValue;
-        console.log(`CPU 사용량 ${this.shardName}: ${mostRecentValue}%`);
         return mostRecentValue;
       } else {
         console.log("CPU 기록을 불러오는데 실패했습니다.");
@@ -92,7 +92,6 @@ export class ShardData {
       if (freeStorage.Values.length > 0) {
         const result = this.bytesToMB(freeStorage.Values[0]);
         this.remainingStorage = result;
-        console.log(`남은 저장공간 ${this.shardName}: ${result} MB`);
 
         return result;
       } else {
@@ -108,9 +107,9 @@ export class ShardData {
   getShardData() {
     return {
       shardName: this.shardName,
-      lastAccessed: this.lastAccessed,
       cpuUsage: this.cpuUsage,
       remainingStorage: this.remainingStorage,
+      lastUpdate: this.lastUpdate,
     };
   }
 

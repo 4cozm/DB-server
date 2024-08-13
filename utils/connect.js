@@ -21,7 +21,7 @@ export const makeDbConnect = async () => {
       const errorConnection = await mysql.createConnection({ ...config, database: "ERROR_DB" });
 
       const shardData = new ShardData(config.database);
-      await shardData.initialize();
+      await shardData.shardUpdate();
 
       connections[key] = {
         game: gameConnection,
