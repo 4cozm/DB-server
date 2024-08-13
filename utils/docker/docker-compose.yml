@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  mysql_user_db:
+    image: mysql:latest
+    container_name: mysql_user_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: USER_DB
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_user_db_data:/var/lib/mysql
+      - ./init_user_db:/docker-entrypoint-initdb.d
+      - ./my.cnf:/etc/mysql/my.cnf
+
+  mysql_game_db:
+    image: mysql:latest
+    container_name: mysql_game_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: GAME_DB
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_game_db_data:/var/lib/mysql
+      - ./init_game_db:/docker-entrypoint-initdb.d
+      - ./my.cnf:/etc/mysql/my.cnf
+
+  mysql_error_db:
+    image: mysql:latest
+    container_name: mysql_error_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: ERROR_DB
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_error_db_data:/var/lib/mysql
+      - ./init_error_db:/docker-entrypoint-initdb.d
+      - ./my.cnf:/etc/mysql/my.cnf
+
+  mysql_main_db:
+    image: mysql:latest
+    container_name: mysql_main_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: MAIN
+    ports:
+      - "3313:3306"
+    volumes:
+      - mysql_main_db_data:/var/lib/mysql
+      - ./init_main_db:/docker-entrypoint-initdb.d
+      - ./my.cnf:/etc/mysql/my.cnf
+
+  redis:
+    image: redis:latest
+    container_name: redis_server
+    ports:
+      - "6379:6379"
+
+volumes:
+  mysql_user_db_data:
+  mysql_game_db_data:
+  mysql_error_db_data:
+  mysql_main_db_data:
+

@@ -24,6 +24,13 @@ export const config = {
       name: env.SHARD_3_NAME,
     },
   },
+  MAIN: {
+    user: env.MAIN_USER,
+    password: env.MAIN_PASSWORD,
+    host: env.MAIN_HOST,
+    port: env.MAIN_PORT,
+    name: env.MAIN_NAME,
+  },
 };
 
 export default config;

@@ -1,4 +1,4 @@
-import { getShard } from "../utils/shardUtils.js";
+import { getShard } from "../db/shardUtils.js";
 import { toCamelCase } from "../utils/transformCase.js";
 
 const SQL_QUERIES = {

@@ -1,7 +1,7 @@
 import mysql from "mysql2/promise";
 import { shards } from "./shardUtils.js";
 import { ShardData } from "./cloudWatch.js";
-
+import config from "../config/config.js";
 let connections;
 
 export const DbConnections = () => {
@@ -34,5 +34,15 @@ export const makeDbConnect = async () => {
     } catch (error) {
       console.error(`${config.database} 중 오류 발생:`, error);
     }
+  }
+};
+
+export const connectMainDb = async () => {
+  try {
+    console.log({ ...config.MAIN });
+    await mysql.createConnection({ ...config.MAIN });
+    console.log("메인 DB 연결 성공");
+  } catch (error) {
+    throw new Error("메인 DB 연결 실패", error);
   }
 };

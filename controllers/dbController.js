@@ -1,4 +1,4 @@
-import { DbConnections } from "../utils/connect.js";
+import { DbConnections } from "../db/connect.js";
 import { resetAllData } from "../utils/migration/createSchema.js";
 
 export const resetAllSchema = async (req, res) => {

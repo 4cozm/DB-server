@@ -19,3 +19,9 @@ export const SHARD_3_PASSWORD = process.env.AWS_SHARD_3_PASSWORD;
 export const SHARD_3_HOST = process.env.AWS_SHARD_3_HOST;
 export const SHARD_3_PORT = process.env.AWS_SHARD_3_PORT;
 export const SHARD_3_NAME = process.env.AWS_SHARD_3_NAME;
+
+export const MAIN_USER = process.env.AWS_MAIN_USER;
+export const MAIN_PASSWORD = process.env.AWS_MAIN_PASSWORD;
+export const MAIN_HOST = process.env.AWS_MAIN_HOST;
+export const MAIN_PORT = process.env.AWS_MAIN_PORT;
+export const MAIN_NAME = process.env.AWS_MAIN_NAME;
