@@ -25,3 +25,5 @@ export const MAIN_PASSWORD = process.env.AWS_MAIN_PASSWORD;
 export const MAIN_HOST = process.env.AWS_MAIN_HOST;
 export const MAIN_PORT = process.env.AWS_MAIN_PORT;
 export const MAIN_NAME = process.env.AWS_MAIN_NAME;
+
+export const WEB_HOOK = process.env.DISCORD_WEB_HOOK;

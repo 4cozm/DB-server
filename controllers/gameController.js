@@ -1,4 +1,5 @@
-import { getShard } from "../utils/shardUtils.js";
+import { saveShard } from "../db/shardUtils.js";
+import { getShardNumber } from "../utils/shardUtils.js";
 
 const GAME_SQL_QUERIES = {
   // FIND_USER_BY_DEVICE_ID: 'SELECT * FROM user WHERE device_id = ?',
@@ -29,8 +30,14 @@ export const createMatchHistory = async (req, res) => {
     if (!sessionId || !playerId || !kill || !death || !damage) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(sessionId);
-    await shard.game.query(GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, [sessionId, playerId, kill, death, damage]);
+    const shard = getShardNumber(sessionId);
+    await saveShard(shard, game, GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, sessionId, [
+      sessionId,
+      playerId,
+      kill,
+      death,
+      damage,
+    ]);
     res.status(200).json({ sessionId, playerId, kill, death, damage });
   } catch (error) {
     console.error(error);
@@ -45,7 +52,7 @@ export const createMatchLog = async (req, res) => {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
     const endTime = Date.now();
-    const shard = getShard(sessionId);
+    const shard = getShardNumber(sessionId);
     await shard.game.query(GAME_SQL_QUERIES.CREATE_MATCH_LOG, [
       sessionId,
       redPlayer1Id,
@@ -69,7 +76,7 @@ export const createUserScore = async (req, res) => {
     if (!playerId || !score) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(playerId);
+    const shard = getShardNumber(playerId);
     await shard.game.query(GAME_SQL_QUERIES.CREATE_USER_SCORE, [playerId, score]);
     res.status(201).json({ playerId, score });
   } catch (error) {
@@ -84,7 +91,7 @@ export const createUserRating = async (req, res) => {
     if (!playerId || !characterId || !win || !lose) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(playerId);
+    const shard = getShardNumber(playerId);
     await shard.game.query(GAME_SQL_QUERIES.CREATE_USER_RATING, [playerId, characterId, win, lose]);
     res.status(201).json({ playerId, characterId, win, lose });
   } catch (error) {
@@ -99,7 +106,7 @@ export const updateUserScore = async (req, res) => {
     if (!playerId || !score) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(playerId);
+    const shard = getShardNumber(playerId);
     const [rows] = await shard.game.query(GAME_SQL_QUERIES.UPDATE_USER_SCORE, [score, playerId]);
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `Player ID ${playerId}를 찾지 못했습니다` });
@@ -117,7 +124,7 @@ export const updateUserRating = async (req, res) => {
     if (!playerId || !characterId || !win || !lose) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(playerId);
+    const shard = getShardNumber(playerId);
     const [rows] = await shard.game.query(GAME_SQL_QUERIES.UPDATE_USER_RATING, [win, lose, playerId, characterId]);
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `Player ID ${playerId}를 찾지 못했습니다` });
@@ -136,7 +143,7 @@ export const getUserScore = async (req, res) => {
     if (!playerId) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(playerId);
+    const shard = getShardNumber(playerId);
     const [rows] = await shard.game.query(GAME_SQL_QUERIES.FIND_USER_SCORE_BY_PLAYER_ID, [playerId]);
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `Player ID ${playerId}를 찾지 못했습니다` });
@@ -154,7 +161,7 @@ export const getUserRating = async (req, res) => {
     if (!playerId) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(playerId);
+    const shard = getShardNumber(playerId);
     const [rows] = shard.game.query(GAME_SQL_QUERIES.FIND_USER_RATING_BY_PLAYER_ID, [playerId]);
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `Player ID ${playerId}를 찾지 못했습니다` });
@@ -172,7 +179,7 @@ export const createCharacter = async (req, res) => {
     if ((!characterName || !hp || !speed || !power || !defense, !critical || !price)) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(characterName);
+    const shard = getShardNumber(characterName);
     await shard.game.query(GAME_SQL_QUERIES.CREATE_CHARACTER, [
       characterName,
       hp,
@@ -195,7 +202,7 @@ export const createCharacterSkill = async (req, res) => {
     if (!skillName || !skillType || !characterId || !damageFactor || !coolTime || !range || !scale) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(skillName);
+    const shard = getShardNumber(skillName);
     await shard.game.query(GAME_SQL_QUERIES.CREATE_CHARACTER_SKILLS, [
       skillName,
       skillType,
@@ -219,7 +226,7 @@ export const findPossessionByPlayerID = async (req, res) => {
     if (!playerId) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(playerId);
+    const shard = getShardNumber(playerId);
     const [rows] = await shard.game.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [playerId]);
     if (rows.length < 0) {
       return res.status(404).json(`${playerId}유저를 찾지 못했습니다`);
@@ -237,7 +244,7 @@ export const createPossession = async (req, res) => {
     if (!player_id || !character_id) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShard(player_id);
+    const shard = getShardNumber(player_id);
     await shard.game.query(GAME_SQL_QUERIES.CREATE_POSSESSION, [player_id, character_id]);
     res.status(200).json({ player_id, character_id });
   } catch (error) {
@@ -245,4 +252,3 @@ export const createPossession = async (req, res) => {
     res.status(500).json({ errorMessage: "createPossession 오류 발생" + error });
   }
 };
-

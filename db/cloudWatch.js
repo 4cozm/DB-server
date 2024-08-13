@@ -104,7 +104,7 @@ export class ShardData {
     }
   }
 
-  getShardData() {
+  getShardNumberData() {
     return {
       shardName: this.shardName,
       cpuUsage: this.cpuUsage,

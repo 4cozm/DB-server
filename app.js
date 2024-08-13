@@ -2,9 +2,6 @@ import express from "express";
 import dbRouter from "./router/dbRouter.js";
 import userRouter from "./router/userRouter.js";
 import { connectMainDb, makeDbConnect } from "./db/connect.js";
-import { getShard } from "./db/shardUtils.js";
-import env from "dotenv";
-env.config();
 
 
 const app = express();
@@ -24,5 +21,4 @@ app.listen(PORT, async () => {
   await makeDbConnect();
   await connectMainDb();
   console.log("DB서버 시작됨 :", PORT);
-  console.log(getShard());
 });

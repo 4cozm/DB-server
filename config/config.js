@@ -29,7 +29,10 @@ export const config = {
     password: env.MAIN_PASSWORD,
     host: env.MAIN_HOST,
     port: env.MAIN_PORT,
-    name: env.MAIN_NAME,
+    database: env.MAIN_NAME,
+  },
+  DISCORD: {
+    WEB_HOOK: env.WEB_HOOK,
   },
 };
 

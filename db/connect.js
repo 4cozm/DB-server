@@ -3,7 +3,15 @@ import { shards } from "./shardUtils.js";
 import { ShardData } from "./cloudWatch.js";
 import config from "../config/config.js";
 let connections;
+let mainDb;
 
+export const getMainDb = () =>{
+  if(!mainDb){
+    throw new Error("DB가 연결되지 않은 상태에서 DB를 조회 했습니다");
+  }else{
+    return mainDb;
+  }
+}
 export const DbConnections = () => {
   if (!connections) {
     throw new Error("DB가 연결되지 않은 상태에서 DB를 조회 했습니다");
@@ -24,10 +32,10 @@ export const makeDbConnect = async () => {
       await shardData.shardUpdate();
 
       connections[key] = {
-        game: gameConnection,
-        user: userConnection,
-        error: errorConnection,
-        status: shardData,
+        GAME_DB: gameConnection,
+        USER_DB: userConnection,
+        ERROR_DB: errorConnection,
+        STATUS: shardData,
       };
 
       console.log(`${config.database}연결 완료`);
@@ -39,8 +47,7 @@ export const makeDbConnect = async () => {
 
 export const connectMainDb = async () => {
   try {
-    console.log({ ...config.MAIN });
-    await mysql.createConnection({ ...config.MAIN });
+    mainDb = await mysql.createConnection({ ...config.MAIN });
     console.log("메인 DB 연결 성공");
   } catch (error) {
     throw new Error("메인 DB 연결 실패", error);
