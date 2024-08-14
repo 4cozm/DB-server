@@ -1,6 +1,6 @@
 import config from "../config/config.js";
 import fatalError from "../error/fatalError.js";
-import { DbConnections, getMainDb } from "./connect.js";
+import { DbConnections, mainDbConnections } from "./connect.js";
 import { getToMainDb, setToMainDb } from "./main.js";
 
 /**
@@ -56,26 +56,25 @@ export const saveShard = async (shardNumber, database, query, key, value) => {
 };
 
 /**
- * @param {String} table
+ * key를 대입하면 해당 값을 가진 shard 객체를 반환
  * @param {String} key
- * @param {String} field - 선택한 열만 반환함 "all" 입력시 전부 출력
+ * @param {'GAME_DB'|'USER_DB'| 'ERROR_DB'} database - 어떤 DB에서 가져올 지 선택
+ * @returns
  */
-export const getDataByKey = async (key, table,field) => {
+export const getShardByKey = async (key, database) => {
   try {
-    const result = await getToMainDb(key);
-    const connections = DbConnections();
-    const dbConnection = connections[result.shard][result.type];
-    const primary = await getPrimaryKey(dbConnection, result.type, table);
-    const query = `SELECT * FROM \`${table}\` WHERE \`${primary}\` = ?`;
-    const [rows] = await dbConnection.execute(query, [key]);
-    if (field === "all") {
-      return rows[0];
-    } else {
-      return rows[0][field];
+    const validDatabases = ["GAME_DB", "USER_DB", "ERROR_DB"];
+
+    // 데이터베이스 값이 유효한지 확인
+    if (!validDatabases.includes(database)) {
+      throw new Error(`올바르지 않은 값: ${database}. 가능한 값 ${validDatabases.join(", ")}.`);
     }
+
+    const result = await getToMainDb(key, database);
+    const connections = DbConnections();
+    return connections[result][database];
   } catch (error) {
-    console.error("Error fetching data by key:", error);
-    throw error;
+    throw new Error(error);
   }
 };
 

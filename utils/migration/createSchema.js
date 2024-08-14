@@ -31,6 +31,14 @@ const executeQueries = async (connection, filePath) => {
   }
 };
 
+export const getQueries = async () => {
+  let executed;
+  executed += await readSQLFile("./utils/migration/sql/createUserDatabase.sql");
+  executed += await readSQLFile("./utils/migration/sql/createGameDatabase.sql");
+  executed += await readSQLFile("./utils/migration/sql/createErrorDatabase.sql");
+  return executed;
+};
+
 export const resetAllData = async (connection) => {
   const dropDatabaseSQL = [
     "DROP DATABASE IF EXISTS USER_DB;",
@@ -50,8 +58,9 @@ export const resetAllData = async (connection) => {
     await executeQueries(connection, "./utils/migration/sql/createErrorDatabase.sql");
     await connection.commit();
 
-    console.log(`데이터 마이그레이션 성공`);
+    console.log(`성공`);
   } catch (error) {
-    throw new Error(`마이그레이션 중 에러 발생:${error}`);
+    console.error(error);
+    throw new Error(`스키마 재설정 에러:${error}`);
   }
 };

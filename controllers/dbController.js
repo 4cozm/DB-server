@@ -1,13 +1,20 @@
-import { DbConnections } from "../db/connect.js";
-import { resetAllData } from "../utils/migration/createSchema.js";
+import { DbConnections, makeShardsConnect, shardConnections } from "../db/connect.js";
+import { getQueries, resetAllData } from "../utils/migration/createSchema.js";
+import { format } from "sql-formatter";
 
 export const resetAllSchema = async (req, res) => {
   try {
-    for (const shard of Object.values(DbConnections())) {
+    await makeShardsConnect();
+    const connections = shardConnections();
+    for (const shard of Object.values(connections)) {
       await resetAllData(shard);
     }
-    res.send("완료됨");
+    const executed = await getQueries();
+    const formattedQuery = format(executed);
+    const htmlFormattedQuery = formattedQuery.replace(/\n/g, "<br>");
+    res.status(201).send(htmlFormattedQuery);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ errorMessage: error.message });
   }
 };
