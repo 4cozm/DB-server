@@ -7,36 +7,51 @@ mainDB는 key가 몇번 샤드에 저장되었는지 최종적으로 관리하�
 세부적인 로직은 해당 코드 스페이스에서 하고 여기서는 get,set에 관한 내용만 다룹니다
 */
 
-import fatalError from "../error/fatalError.js";
 import { mainDbConnections } from "./connect.js";
 
 /**
  * 샤드의 Key 와 샤드 번호를 저장하는 함수
  * @param {String} key
  * @param {Number} shardNumber
- * @param {'game' | 'user' | 'error'} type
+ * @param {'game' | 'user' | 'error'} database
+ * @param {String} table
+ * 가능한 값:
+ * - GAME_DB:
+ *   - "character"
+ *   - "character_skill"
+ *   - "rating"
+ *   - "match_history"
+ *   - "match_log"
+ *   - "possession"
+ *   - "score"
+ *
+ * - USER_DB:
+ *   - "account"
+ *   - "money"
+ *
+ * - ERROR_DB:
+ *   - "error_log"
+ *
  */
-export const setToMainDb = async (key, shardNumber, type) => {
+export const setToMainDb = async (key, shardNumber, database, table) => {
   const connection = mainDbConnections();
-
   try {
-    await connection.beginTransaction();
-    await connection.execute(`INSERT INTO Shards (\`key\`, shard_number,\`type\`) VALUES (?, ?, ?)`, [
-      key,
-      shardNumber,
-      type,
-    ]);
-    await connection.commit();
+    const [rows] = await connection.execute(
+      `SELECT shard_number FROM Shards WHERE \`key\` = ? AND \`database\` = ? AND \`table\` = ?`,
+      [key, database, table]
+    );
+
+    if (rows.length > 0) {
+      throw new Error(
+        `중복 저장을 하고 있습니다! - 저장을 시도한 샤드: ${shardNumber} 번, key: ${key}, database: ${database}, table: ${table}은 이미 ${rows[0].shard_number} 번 샤드에 존재합니다`
+      );
+    }
+    await connection.execute(
+      `INSERT INTO Shards (\`key\`, shard_number, \`database\`, \`table\`) VALUES (?, ?, ?, ?)`,
+      [key, shardNumber, database, table]
+    );
   } catch (error) {
-    if (connection) {
-      console.log("메인 DB 롤백");
-      await connection.rollback();
-    }
-    if (error.code === "ER_DUP_ENTRY") {
-      throw new Error("중복된 요소: 이 키는 이미 존재합니다.");
-    } else {
-      fatalError(error, "메인 DB에 키,샤드 정보 저장에 실패했습니다");
-    }
+    throw error;
   }
 };
 
@@ -44,20 +59,21 @@ export const setToMainDb = async (key, shardNumber, type) => {
  * Key 값을 넣으면 해당하는 shard의 번호와 저장된 database의 타입(game,user,error)을 반환
  * @param {String} key
  */
-export const getToMainDb = async (key, database) => {
+export const getToMainDb = async (key, database, table) => {
   const connection = mainDbConnections();
   const query = `
       SELECT shard_number
       FROM Shards
       WHERE \`key\` = ?
-        AND \`type\` = ?
+        AND \`database\` = ?
+        AND \`table\` =?
     `;
   try {
-    const [rows] = await connection.execute(query, [key, database]);
+    const [rows] = await connection.execute(query, [key, database, table]);
     if (rows.length > 0) {
       return rows[0].shard_number;
     } else {
-      throw new Error("getToMainDb 에러 - 해당 key에 대한 shard_name을 찾을 수 없습니다.");
+      throw new Error("getToMainDb 에러 - 해당 key로 저장된 shard 위치를 찾을 수 없습니다.");
     }
   } catch (error) {
     console.error("데이터 조회 중 오류 발생:", error);

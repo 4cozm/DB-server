@@ -1,5 +1,7 @@
-import { saveShard } from "../db/shardUtils.js";
-import { getShardNumber } from "../utils/shardUtils.js";
+import { getShardByKey, saveShard } from "../db/shardUtils.js";
+import { getShardNumber } from "../db/shardUtils.js";
+import formatDate from "../utils/dateFormatter.js";
+import { DbConnections } from "../db/connect.js";
 
 const GAME_SQL_QUERIES = {
   // FIND_USER_BY_DEVICE_ID: 'SELECT * FROM user WHERE device_id = ?',
@@ -18,27 +20,26 @@ const GAME_SQL_QUERIES = {
   UPDATE_USER_RATING: "UPDATE rating SET win = ?, lose = ? WHERE player_id = ? AND character_id = ?",
   FIND_USER_SCORE_BY_PLAYER_ID: "SELECT * FROM score WHERE player_id = ?",
   FIND_USER_RATING_BY_PLAYER_ID: "SELECT * FROM rating WHERE player_id = ?",
-  CREATE_CHARACTER:
-    "INSERT INTO `character` (character_name, hp, speed, power, defense, critical, price) VALUES (?, ?, ?, ?, ?, ?, ?)",
-  CREATE_CHARACTER_SKILLS:
-    "INSERT INTO character_skills (skill_name, skill_type, character_id, damage_factor, cool_time, `range`, `scale`) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  FIND_CHARACTERS_DATA: "SELECT * FROM `character`",
+  FIND_CHARACTERS_INFO: "SELECT * FROM `character` WHERE character_id=? ",
+  UPDATE_POSSESSION: "UPDATE possession SET character_id = ? WHERE player_id = ?",
 };
 
 export const createMatchHistory = async (req, res) => {
   try {
     const { sessionId, playerId, kill, death, damage } = req.body;
-    if (!sessionId || !playerId || !kill || !death || !damage) {
+    if (sessionId == null || playerId == null || kill == null || death == null || damage == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShardNumber(sessionId);
-    await saveShard(shard, game, GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, sessionId, [
+    const shard = await getShardNumber();
+    const log = await saveShard(shard, "GAME_DB", "match_history", GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, sessionId, [
       sessionId,
       playerId,
       kill,
       death,
       damage,
     ]);
-    res.status(200).json({ sessionId, playerId, kill, death, damage });
+    res.status(200).json(log);
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMessage: "createMatchHistory 오류 발생" + error });
@@ -48,12 +49,20 @@ export const createMatchHistory = async (req, res) => {
 export const createMatchLog = async (req, res) => {
   try {
     const { sessionId, redPlayer1Id, redPlayer2Id, bluePlayer1Id, bluePlayer2Id, winTeam, startTime } = req.body;
-    if (!sessionId || !redPlayer1Id || !redPlayer2Id || !bluePlayer1Id || !bluePlayer2Id || !winTeam || !startTime) {
+    if (
+      sessionId == null ||
+      redPlayer1Id == null ||
+      redPlayer2Id == null ||
+      bluePlayer1Id == null ||
+      bluePlayer2Id == null ||
+      winTeam == null ||
+      startTime == null
+    ) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
     const endTime = Date.now();
-    const shard = getShardNumber(sessionId);
-    await shard.game.query(GAME_SQL_QUERIES.CREATE_MATCH_LOG, [
+    const shard = await getShardNumber();
+    const log = await saveShard(shard, "GAME_DB", "match_log", GAME_SQL_QUERIES.CREATE_MATCH_LOG, sessionId, [
       sessionId,
       redPlayer1Id,
       redPlayer2Id,
@@ -63,7 +72,7 @@ export const createMatchLog = async (req, res) => {
       formatDate(new Date(startTime)),
       formatDate(new Date(endTime)),
     ]);
-    res.status(201).json({ sessionId, redPlayer1Id, redPlayer2Id, bluePlayer1Id, bluePlayer2Id, winTeam, endTime });
+    res.status(201).json(log);
   } catch (error) {
     res.status(500).json({ errorMessage: "createMatchLog 오류 발생:" + error });
     console.error(error);
@@ -73,12 +82,15 @@ export const createMatchLog = async (req, res) => {
 export const createUserScore = async (req, res) => {
   try {
     const { playerId, score } = req.body;
-    if (!playerId || !score) {
+    if (playerId == null || score == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShardNumber(playerId);
-    await shard.game.query(GAME_SQL_QUERIES.CREATE_USER_SCORE, [playerId, score]);
-    res.status(201).json({ playerId, score });
+    const shard = await getShardNumber();
+    const log = await saveShard(shard, "GAME_DB", "score", GAME_SQL_QUERIES.CREATE_USER_SCORE, playerId, [
+      playerId,
+      score,
+    ]);
+    res.status(201).json(log);
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMessage: "createUserScore 오류 발생" + error });
@@ -88,12 +100,17 @@ export const createUserScore = async (req, res) => {
 export const createUserRating = async (req, res) => {
   try {
     const { playerId, characterId, win, lose } = req.body;
-    if (!playerId || !characterId || !win || !lose) {
+    if (playerId == null || characterId == null || win == null || lose == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShardNumber(playerId);
-    await shard.game.query(GAME_SQL_QUERIES.CREATE_USER_RATING, [playerId, characterId, win, lose]);
-    res.status(201).json({ playerId, characterId, win, lose });
+    const shard = await getShardNumber();
+    const log = await saveShard(shard, "GAME_DB", "rating", GAME_SQL_QUERIES.CREATE_USER_RATING, playerId, [
+      playerId,
+      characterId,
+      win,
+      lose,
+    ]);
+    res.status(201).json(log);
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMessage: "createUserRating 오류 발생" + error });
@@ -103,14 +120,11 @@ export const createUserRating = async (req, res) => {
 export const updateUserScore = async (req, res) => {
   try {
     const { playerId, score } = req.body;
-    if (!playerId || !score) {
+    if (playerId == null || score == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShardNumber(playerId);
-    const [rows] = await shard.game.query(GAME_SQL_QUERIES.UPDATE_USER_SCORE, [score, playerId]);
-    if (rows.affectedRows === 0) {
-      return res.status(404).json({ errorMessage: `Player ID ${playerId}를 찾지 못했습니다` });
-    }
+    const connection = getShardByKey(playerId, "GAME_DB", "score");
+    await connection.query(GAME_SQL_QUERIES.UPDATE_USER_SCORE, [score, playerId]);
     res.status(200).json({ playerId, score });
   } catch (error) {
     console.error(error);
@@ -121,13 +135,16 @@ export const updateUserScore = async (req, res) => {
 export const updateUserRating = async (req, res) => {
   try {
     const { playerId, characterId, win, lose } = req.body;
-    if (!playerId || !characterId || !win || !lose) {
-      return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+    if (playerId == null || characterId == null || win == null || lose == null) {
+      return res.status(400).json({
+        errorMessage: `필수 데이터가 누락되었습니다.playerId:${playerId},characterId:${characterId},win:${win},lose:${lose}`,
+      });
     }
-    const shard = getShardNumber(playerId);
-    const [rows] = await shard.game.query(GAME_SQL_QUERIES.UPDATE_USER_RATING, [win, lose, playerId, characterId]);
+    const connection = await getShardByKey(playerId, "GAME_DB", "rating");
+    const [rows] = await connection.query(GAME_SQL_QUERIES.UPDATE_USER_RATING, [win, lose, playerId, characterId]);
+    console.log(rows);
     if (rows.affectedRows === 0) {
-      return res.status(404).json({ errorMessage: `Player ID ${playerId}를 찾지 못했습니다` });
+      return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
     res.status(200).json({ playerId, characterId, win, lose });
   } catch (error) {
@@ -140,13 +157,13 @@ export const getUserScore = async (req, res) => {
   //최종 프로젝트 파일과 함수명 다름 findUserScoreTable
   try {
     const { playerId } = req.body;
-    if (!playerId) {
+    if (playerId == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShardNumber(playerId);
-    const [rows] = await shard.game.query(GAME_SQL_QUERIES.FIND_USER_SCORE_BY_PLAYER_ID, [playerId]);
+    const connection = await getShardByKey(playerId, "GAME_DB", "score");
+    const [rows] = await connection.query(GAME_SQL_QUERIES.FIND_USER_SCORE_BY_PLAYER_ID, [playerId]);
     if (rows.affectedRows === 0) {
-      return res.status(404).json({ errorMessage: `Player ID ${playerId}를 찾지 못했습니다` });
+      return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
     res.status(200).json(rows[0]);
   } catch (error) {
@@ -158,13 +175,13 @@ export const getUserScore = async (req, res) => {
 export const getUserRating = async (req, res) => {
   try {
     const { playerId } = req.body;
-    if (!playerId) {
+    if (playerId == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShardNumber(playerId);
-    const [rows] = shard.game.query(GAME_SQL_QUERIES.FIND_USER_RATING_BY_PLAYER_ID, [playerId]);
+    const connection = await getShardByKey(playerId, "GAME_DB", "rating");
+    const [rows] = await connection.query(GAME_SQL_QUERIES.FIND_USER_RATING_BY_PLAYER_ID, [playerId]);
     if (rows.affectedRows === 0) {
-      return res.status(404).json({ errorMessage: `Player ID ${playerId}를 찾지 못했습니다` });
+      return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
     res.status(200).json(rows[0]);
   } catch (error) {
@@ -173,61 +190,68 @@ export const getUserRating = async (req, res) => {
   }
 };
 
-export const createCharacter = async (req, res) => {
-  try {
-    const { characterName, hp, speed, power, defense, critical, price } = req.body;
-    if ((!characterName || !hp || !speed || !power || !defense, !critical || !price)) {
-      return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
-    }
-    const shard = getShardNumber(characterName);
-    await shard.game.query(GAME_SQL_QUERIES.CREATE_CHARACTER, [
-      characterName,
-      hp,
-      speed,
-      power,
-      defense,
-      critical,
-      price,
-    ]);
-    res.status(201).json({ characterName, hp, speed, power, defense, critical, price });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ errorMessage: "createCharacter 오류 발생" + error });
-  }
-};
+// export const createCharacter = async (req, res) => {
+//   try {
+//     const { characterName, hp, speed, power, defense, critical, price } = req.body;
+//     if (
+//       characterName == null ||
+//       hp == null ||
+//       speed == null ||
+//       power == null ||
+//       defense == null ||
+//       critical == null ||
+//       price == null
+//     ) {
+//       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+//     }
+//     const shard = await getShardNumber();
+//     const log = await saveShard(shard, "GAME_DB", "character", GAME_SQL_QUERIES.CREATE_CHARACTER, characterName, [
+//       characterName,
+//       hp,
+//       speed,
+//       power,
+//       defense,
+//       critical,
+//       price,
+//     ]);
+//     res.status(201).json(log);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ errorMessage: "createCharacter 오류 발생" + error });
+//   }
+// };
 
-export const createCharacterSkill = async (req, res) => {
-  try {
-    const { skillName, skillType, characterId, damageFactor, coolTime, range, scale } = req.body;
-    if (!skillName || !skillType || !characterId || !damageFactor || !coolTime || !range || !scale) {
-      return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
-    }
-    const shard = getShardNumber(skillName);
-    await shard.game.query(GAME_SQL_QUERIES.CREATE_CHARACTER_SKILLS, [
-      skillName,
-      skillType,
-      characterId,
-      damageFactor,
-      coolTime,
-      range,
-      scale,
-    ]);
-    res.status(201).json({ skillName, skillType, characterId, damageFactor, coolTime, range, scale });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ errorMessage: "createCharacterSkill 오류 발생" + error });
-  }
-};
+// export const createCharacterSkill = async (req, res) => {
+//   try {
+//     const { skillName, skillType, characterId, damageFactor, coolTime, range, scale } = req.body;
+//     if (!skillName || !skillType || !characterId || !damageFactor || !coolTime || !range || !scale) {
+//       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+//     }
+//     const shard = getShardNumber(skillName);
+//     await shard.game.query(GAME_SQL_QUERIES.CREATE_CHARACTER_SKILLS, [
+//       skillName,
+//       skillType,
+//       characterId,
+//       damageFactor,
+//       coolTime,
+//       range,
+//       scale,
+//     ]);
+//     res.status(201).json({ skillName, skillType, characterId, damageFactor, coolTime, range, scale });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ errorMessage: "createCharacterSkill 오류 발생" + error });
+//   }
+// };
 
 export const findPossessionByPlayerID = async (req, res) => {
-  //포지션 보다는 캐릭터 보유 목록을 반환하는게 어떨까
   try {
     const { playerId } = req.body;
-    if (!playerId) {
+    if (playerId == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShardNumber(playerId);
-    const [rows] = await shard.game.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [playerId]);
+    const connection = await getShardByKey(playerId, "GAME_DB", "possession");
+    const [rows] = await connection.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [playerId]);
     if (rows.length < 0) {
       return res.status(404).json(`${playerId}유저를 찾지 못했습니다`);
     }
@@ -241,14 +265,68 @@ export const findPossessionByPlayerID = async (req, res) => {
 export const createPossession = async (req, res) => {
   try {
     const { player_id, character_id } = req.body;
-    if (!player_id || !character_id) {
+    if (player_id == null || character_id == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const shard = getShardNumber(player_id);
-    await shard.game.query(GAME_SQL_QUERIES.CREATE_POSSESSION, [player_id, character_id]);
-    res.status(200).json({ player_id, character_id });
+    const shard = await getShardNumber();
+    const log = await saveShard(shard, "GAME_DB", "possession", GAME_SQL_QUERIES.CREATE_POSSESSION, player_id, [
+      player_id,
+      character_id,
+    ]);
+    res.status(200).json(log);
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMessage: "createPossession 오류 발생" + error });
+  }
+};
+
+export const updatePossession = async (req, res) => {
+  const { player_id, character_id } = req.body;
+  if (player_id == null || character_id == null) {
+    return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+  }
+  try {
+    const connection = await getShardByKey(player_id, "GAME_DB", "possession");
+    const [rows] = await connection.query(GAME_SQL_QUERIES.CREATE_POSSESSION, [player_id, character_id]);
+    if (rows.affectedRows === 0) {
+      return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
+    }
+    res.status(200).json({ player_id, character_id });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMessage: "updatePossession 오류 발생" + error });
+  }
+};
+
+export const findCharacterData = async (req, res) => {
+  //모든 샤드의 GAME_DB에는 캐릭터 정보가 중복 포함되어 있음. redis 같은곳으로 캐릭터 조회를 옮겨야 함. 일단 어거지로 구현만 해둘 예정
+  try {
+    const connections = DbConnections();
+    const [rows] = await connections[0]["GAME_DB"].query(GAME_SQL_QUERIES.FIND_CHARACTERS_DATA);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMessage: "findCharacterData 오류 발생" + error });
+  }
+};
+
+/**
+ * findCharacterData 와 유사함 쿼리는 일단 따로 만들어서 작동하게 끔 해둠
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
+export const findCharacterInfo = async (req, res) => {
+  const { character_id } = req.body;
+  if (character_id == null) {
+    return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+  }
+  try {
+    const connections = DbConnections();
+    const [rows] = await connections[0]["GAME_DB"].query(GAME_SQL_QUERIES.FIND_CHARACTERS_INFO, [character_id]);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMessage: "findCharacterInfo 오류 발생" + error });
   }
 };

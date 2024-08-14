@@ -1,8 +1,8 @@
 import express from "express";
 import dbRouter from "./router/dbRouter.js";
 import userRouter from "./router/userRouter.js";
+import gameRouter from "./router/gameRouter.js";
 import { connectMainDb, makeDbConnect } from "./db/connect.js";
-
 
 const app = express();
 const PORT = 3000;
@@ -16,6 +16,7 @@ app.use(express.json());
 app.use("/", router);
 app.use("/api/db", dbRouter);
 app.use("/api/user", userRouter);
+app.use("/api/game", gameRouter);
 
 app.listen(PORT, async () => {
   await makeDbConnect();

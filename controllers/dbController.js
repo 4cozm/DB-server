@@ -10,9 +10,8 @@ export const resetAllSchema = async (req, res) => {
       await resetAllData(shard);
     }
     const executed = await getQueries();
-    const formattedQuery = format(executed);
-    const htmlFormattedQuery = formattedQuery.replace(/\n/g, "<br>");
-    res.status(201).send(htmlFormattedQuery);
+    const htmlFormattedQuery = format(executed).replace(/\n/g, "<br>");
+    res.status(201).send(htmlFormattedQuery); //JSON으로 보내면 깨져서 html로 변환후 반환
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMessage: error.message });

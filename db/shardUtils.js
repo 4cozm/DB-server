@@ -2,31 +2,52 @@ import config from "../config/config.js";
 import fatalError from "../error/fatalError.js";
 import { DbConnections, mainDbConnections } from "./connect.js";
 import { getToMainDb, setToMainDb } from "./main.js";
+import { validTables, validDatabases } from "../utils/validate.js";
 
 /**
  * 가장 최적의 샤드 객체 번호를 가져오는 함수
  * @return connections 기반의 shard 번호를 반환 (0,1,2...)
  */
-export const getShardNumber = () => {
+export const getShardNumber = async () => {
   const connections = DbConnections();
-  const shards = checkUpdateTime(connections);
+  const shards = await checkUpdateTime(connections);
   return selectBestShard(shards);
 };
 
 /**
- * Main DB와 입력받은 샤드에 데이터를 저장하는 기능
+ * Main DB와 입력받은 샤드에 데이터를 저장, 저장후 결과를 반환
  * @param {Number} shardNumber - getShardNumber() 함수의 결과를 대입
  * @param {'GAME_DB'|'USER_DB'| 'ERROR_DB'} database - 어떤 DB에 저장할 지 선택
+ * @param {String} table
+ * 가능한 값:
+ * - GAME_DB:
+ *   - "character"
+ *   - "character_skill"
+ *   - "rating"
+ *   - "match_history"
+ *   - "match_log"
+ *   - "possession"
+ *   - "score"
+ *
+ * - USER_DB:
+ *   - "account"
+ *   - "money"
+ *
+ * - ERROR_DB:
+ *   - "error_log"
+ *
  * @param {Query} query - 시행할 쿼리를 선택
  * @param {String} key - 조회시 사용될 key를 선택(조회시 해당 KEY값을 대입해야함)
  * @param {value} any - 저장할 정보
+ * @returns - ${shardNumber}번 샤드,${database} , ${table}에 key:${key}, 저장: ${value}로 저장되었습니다
  */
-export const saveShard = async (shardNumber, database, query, key, value) => {
-  const validDatabases = ["GAME_DB", "USER_DB", "ERROR_DB"];
-
+export const saveShard = async (shardNumber, database, table, query, key, value) => {
   // 데이터베이스 값이 유효한지 확인
   if (!validDatabases.includes(database)) {
-    throw new Error(`올바르지 않은 값: ${database}. 가능한 값 ${validDatabases.join(", ")}.`);
+    throw new Error(`올바르지 않은 데이터 베이스: ${database}. 가능한 값 ${validDatabases.join(", ")}.`);
+  }
+  if (!validTables[database].includes(table)) {
+    throw new Error(`올바르지 않은 테이블: ${table} 가능 한 값: ${validTables[database]}`);
   }
   const connections = DbConnections();
   const dbConnection = connections[shardNumber][database];
@@ -38,39 +59,57 @@ export const saveShard = async (shardNumber, database, query, key, value) => {
 
     // 쿼리 실행
     await dbConnection.query(query, value);
-    await setToMainDb(key, shardNumber, database);
+    await setToMainDb(key, shardNumber, database, table);
 
     await dbConnection.commit();
 
-    console.log(`${shardNumber}번 샤드,${database}데이터 베이스에 ${key}:${value}로 저장되었습니다`);
+    const log = `${shardNumber}번 샤드,${database} , ${table}에 key:${key}, 저장: ${value}로 저장되었습니다`;
+    console.log(log);
+    return log;
   } catch (error) {
-    if (dbConnection) {
-      await dbConnection.rollback();
-    }
+    await dbConnection.rollback();
     if (error.code === "ER_DUP_ENTRY") {
-      throw new Error("ER_DUP_ENTRY");
+      throw new Error("중복된 저장 입니다");
     } else {
-      fatalError(error, "데이터 베이스에 정보를 저장하는데 실패했습니다. 데이터를 롤백합니다");
+      throw new Error(error);
     }
   }
 };
 
 /**
- * key를 대입하면 해당 값을 가진 shard 객체를 반환
+ * key를 대입하면 해당 값을 가진 shard 연결을 반환
  * @param {String} key
  * @param {'GAME_DB'|'USER_DB'| 'ERROR_DB'} database - 어떤 DB에서 가져올 지 선택
+ * @param {String} table
+ * 가능한 값:
+ * - GAME_DB:
+ *   - "character"
+ *   - "character_skill"
+ *   - "rating"
+ *   - "match_history"
+ *   - "match_log"
+ *   - "possession"
+ *   - "score"
+ *
+ * - USER_DB:
+ *   - "account"
+ *   - "money"
+ *
+ * - ERROR_DB:
+ *   - "error_log"
+ *
  * @returns
  */
-export const getShardByKey = async (key, database) => {
+export const getShardByKey = async (key, database, table) => {
+  if (!validDatabases.includes(database)) {
+    throw new Error(`올바르지 않은 데이터 베이스: ${database}. 가능한 값 ${validDatabases.join(", ")}.`);
+  }
+  if (!validTables[database].includes(table)) {
+    throw new Error(`올바르지 않은 테이블: ${table} 가능 한 값: ${validTables[database]}`);
+  }
+
   try {
-    const validDatabases = ["GAME_DB", "USER_DB", "ERROR_DB"];
-
-    // 데이터베이스 값이 유효한지 확인
-    if (!validDatabases.includes(database)) {
-      throw new Error(`올바르지 않은 값: ${database}. 가능한 값 ${validDatabases.join(", ")}.`);
-    }
-
-    const result = await getToMainDb(key, database);
+    const result = await getToMainDb(key, database, table);
     const connections = DbConnections();
     return connections[result][database];
   } catch (error) {
@@ -78,7 +117,7 @@ export const getShardByKey = async (key, database) => {
   }
 };
 
-const checkUpdateTime = (connections) => {
+const checkUpdateTime = async (connections) => {
   const shards = {};
   Object.keys(connections).forEach(async (key) => {
     if (Date.now - connections[key].STATUS.getShardNumberData().lastUpdate >= 60000) {
@@ -112,10 +151,9 @@ const selectBestShard = (shards) => {
     throw new Error("샤드의 정보가 존재하지 않습니다");
   }
   let result;
+  let biggestStorage = 0;
   Object.keys(shards).forEach((key) => {
     const shard = shards[key];
-
-    let biggestStorage = 0;
     if (shard.remainingStorage > biggestStorage) {
       biggestStorage = shard.remainingStorage;
       result = key;
@@ -124,7 +162,6 @@ const selectBestShard = (shards) => {
 
   if (result.cpu > 80) {
     console.log("cpu 과부하로 인해 CPU 점유율이 가장 낮은곳에 저장합니다");
-    let result;
     Object.keys(shards).forEach((key) => {
       const shard = shards[key];
 
