@@ -15,9 +15,11 @@ export const sendErrorToDiscord = async (error, message) => {
   }
 };
 
-export const sendGitPushAlert = async () => {
+export const sendGitPushAlert = async (commitMessage , pusher) => {
   const message = {
-    content: `깃허브DB 서버에 git push를 하셨더라구요~... 서버 바로 다시 시작할께요~ 중간 체크 잊지말고 부탁드립니다!`,
+    content: `깃허브DB 서버에 git push를 하셨더라구요~... 
+    커밋 메세지는 ${commitMessage} 이고 ${pusher} 님께서 올려주셨네요~
+    서버 바로 다시 시작할께요~ 중간 체크 잊지말고 해주세요!`,
   };
 
   try {
