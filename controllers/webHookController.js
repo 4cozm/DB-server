@@ -24,8 +24,6 @@ export const webHook = (req, res) => {
             console.error("PM2 restart failed:", err);
             return res.status(500).send("PM2 restart failed");
           }
-          console.log("PM2 process restarted successfully");
-          res.status(200).send("Webhook handled, PM2 process restarted");
         });
       } else {
         res.status(200).send("No changes detected");
