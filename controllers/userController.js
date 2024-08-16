@@ -43,7 +43,7 @@ export const createUser = async (req, res) => {
       pw,
       name,
     ]);
-    res.status(201).json({ message: "계정 생성 성공", playerId: player_id });
+    res.status(201).json({ message: "계정 생성 성공", player_id });
   } catch (error) {
     res.status(500).json({ message: "계정 생성중 오류 발생", error: error.message });
   }

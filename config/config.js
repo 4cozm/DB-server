@@ -35,7 +35,7 @@ export const config = {
     WEB_HOOK: env.DISCORD_WEB_HOOK,
   },
   GITHUB: {
-    WEB_HOOK: env.DISCORD_WEB_HOOK,
+    WEB_HOOK: env.GITHUB_WEB_HOOK,
   },
 };
 

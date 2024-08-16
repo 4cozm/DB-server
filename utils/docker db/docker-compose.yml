@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  shard1:
+    image: mysql:latest
+    container_name: shard1
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: shard-1
+    ports:
+      - "3310:3306"
+    volumes:
+      - shard1-data:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/my.cnf
+
+  shard2:
+    image: mysql:latest
+    container_name: shard2
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: shard-2
+    ports:
+      - "3311:3306"
+    volumes:
+      - shard2-data:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/my.cnf
+
+  shard3:
+    image: mysql:latest
+    container_name: shard3
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: shard-3
+    ports:
+      - "3312:3306"
+    volumes:
+      - shard3-data:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/my.cnf
+
+  main:
+    image: mysql:latest
+    container_name: main
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: MAIN_DB
+    ports:
+      - "3313:3306"
+    volumes:
+      - main-data:/var/lib/mysql
+      - ./init_main_db:/docker-entrypoint-initdb.d
+      - ./my.cnf:/etc/mysql/my.cnf
+
+volumes:
+  shard1-data:
+  shard2-data:
+  shard3-data:
+  main-data:

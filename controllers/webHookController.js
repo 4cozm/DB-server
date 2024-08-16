@@ -6,7 +6,7 @@ dotenv.config();
 
 const REPO_DIR = process.env.REPO_DIR;
 const PM2_PROCESS_NAME = process.env.PM2_PROCESS_NAME;
-//테스트2
+
 export const webHook = (req, res) => {
   if (req.body.ref === "refs/heads/main") {
     // main 브랜치에 push 이벤트 발생 시
@@ -18,7 +18,7 @@ export const webHook = (req, res) => {
       }
 
       if (update && update.summary.changes) {
-        await sendGitPushAlert(req.body.commits.message,req.body.pusher.name);
+        await sendGitPushAlert(req.body.commits.message, req.body.pusher.name);
         exec(`pm2 restart ${PM2_PROCESS_NAME}`, (err, stdout, stderr) => {
           if (err) {
             console.error("PM2 restart failed:", err);
