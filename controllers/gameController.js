@@ -190,6 +190,7 @@ export const getUserRating = async (req, res) => {
   }
 };
 
+// 해당 기능은 챔피언? 영웅을 만드는 기능인데, 지금은 해당 데이터를 바로 저장해둔 상태라서 추가하는 기능은 불필요하다고 생각했음(사용하려면 구조 변경해야함)
 // export const createCharacter = async (req, res) => {
 //   try {
 //     const { characterName, hp, speed, power, defense, critical, price } = req.body;
