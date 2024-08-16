@@ -17,7 +17,7 @@ export const sendErrorToDiscord = async (error, message) => {
 
 export const sendGitPushAlert = async () => {
   const message = {
-    content: `노드 5기 여러분 제 목소리 들리시나요?~ 깃허브에 push를 하셨더라구요~... 서버 바로 다시 시작할께요~ 중간 체크 잊지말고 부탁드립니다!`,
+    content: `깃허브DB 서버에 git push를 하셨더라구요~... 서버 바로 다시 시작할께요~ 중간 체크 잊지말고 부탁드립니다!`,
   };
 
   try {

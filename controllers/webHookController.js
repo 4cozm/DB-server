@@ -8,11 +8,10 @@ const REPO_DIR = process.env.REPO_DIR;
 const PM2_PROCESS_NAME = process.env.PM2_PROCESS_NAME;
 //테스트2
 export const webHook = (req, res) => {
-  console.log("webhook 도착");
   if (req.body.ref === "refs/heads/main") {
     // main 브랜치에 push 이벤트 발생 시
     const git = simpleGit(REPO_DIR);
-
+    sendGitPushAlert();
     git.pull((err, update) => {
       if (err) {
         console.error("Git pull failed:", err);
@@ -20,7 +19,6 @@ export const webHook = (req, res) => {
       }
 
       if (update && update.summary.changes) {
-        sendGitPushAlert();
         exec(`pm2 restart ${PM2_PROCESS_NAME}`, (err, stdout, stderr) => {
           if (err) {
             console.error("PM2 restart failed:", err);
