@@ -18,8 +18,7 @@ export const webHook = (req, res) => {
       }
 
       if (update && update.summary.changes) {
-        console.log(req.body.commits);
-        await sendGitPushAlert(req.body.commits.message, req.body.commits.title, req.body.pusher.name);
+        await sendGitPushAlert(req.body.commits[0].message, req.body.pusher.name);
         exec(`pm2 restart ${PM2_PROCESS_NAME}`, (err, stdout, stderr) => {
           if (err) {
             console.error("PM2 restart failed:", err);
