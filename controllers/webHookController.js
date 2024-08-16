@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import simpleGit from "simple-git";
 import { exec } from "child_process";
+import { sendGitPushAlert } from "../utils/webHook.js";
 dotenv.config();
 
 const REPO_DIR = process.env.REPO_DIR;
@@ -18,7 +19,7 @@ export const webHook = (req, res) => {
       }
 
       if (update && update.summary.changes) {
-        console.log("Changes detected, restarting PM2 process...");
+        sendGitPushAlert();
         exec(`pm2 restart ${PM2_PROCESS_NAME}`, (err, stdout, stderr) => {
           if (err) {
             console.error("PM2 restart failed:", err);
