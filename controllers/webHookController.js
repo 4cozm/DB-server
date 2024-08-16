@@ -6,7 +6,7 @@ dotenv.config();
 
 const REPO_DIR = process.env.REPO_DIR;
 const PM2_PROCESS_NAME = process.env.PM2_PROCESS_NAME;
-//테스트
+//테스트2
 export const webHook = (req, res) => {
   console.log("webhook 도착");
   if (req.body.ref === "refs/heads/main") {
