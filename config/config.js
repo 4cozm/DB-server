@@ -32,7 +32,10 @@ export const config = {
     database: env.MAIN_NAME,
   },
   DISCORD: {
-    WEB_HOOK: env.WEB_HOOK,
+    WEB_HOOK: env.DISCORD_WEB_HOOK,
+  },
+  GITHUB: {
+    WEB_HOOK: env.DISCORD_WEB_HOOK,
   },
 };
 
