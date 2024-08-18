@@ -5,10 +5,13 @@ import formatDate from "../utils/dateFormatter.js";
 import { mainDbConnections } from "../db/connect.js";
 
 const SQL_QUERIES = {
-  FIND_USER_BY_PLAYER_ID: "SELECT * FROM Shards WHERE `key` = ? AND `table` = 'account'",
-  CREATE_USER: "INSERT INTO account (player_id, pw, name) VALUES (?, ?, ?)",
+  FIND_USER_BY_PLAYER_ID: "SELECT * FROM account WHERE player_id = ?",
+  FIND_USER_BY_NAME: "SELECT * FROM account WHERE name = ?",
+  CREATE_USER: "INSERT INTO account (player_id, pw, name, guild) VALUES (?, ?, ?, ?)",
   UPDATE_USER_LOGIN: "UPDATE account SET last_login = CURRENT_TIMESTAMP WHERE player_id = ?",
   FIND_MONEY_BY_PLAYER_ID: "SELECT money FROM money WHERE player_id = ?",
+  UPDATE_MONEY: "UPDATE money SET money = ? WHERE player_id = ?",
+  CREATE_USER_MONEY: "INSERT INTO money (player_id, money) VALUES (?, ?)",
 };
 
 export const findUserByPlayerId = async (req, res) => {
@@ -30,8 +33,7 @@ export const findUserByPlayerId = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { player_id, pw, name, guild } = req.body;
-
+    const { player_id, name, pw, guild } = req.body;
     if (player_id == null || pw == null || name == null || guild == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
@@ -41,12 +43,31 @@ export const createUser = async (req, res) => {
     }
     await saveShard(await getShardNumber(), "USER_DB", "account", SQL_QUERIES.CREATE_USER, player_id, [
       player_id,
-      pw,
       name,
+      pw,
+      guild,
     ]);
     res.status(201).json({ message: "계정 생성 성공", player_id });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "계정 생성중 오류 발생", error: error.message });
+  }
+};
+
+export const createUserMoney = async (req, res) => {
+  try {
+    const { player_id, money } = req.body;
+    if (player_id == null || money == null) {
+      return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+    }
+    await saveShard(await getShardNumber(), "USER_DB", "money", SQL_QUERIES.CREATE_USER_MONEY, player_id, [
+      player_id,
+      money,
+    ]);
+    res.status(201).json({ message: "money 정보 생성 완료", player_id });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "money 정보 생성중 오류 발생", error: error.message });
   }
 };
 
@@ -86,10 +107,14 @@ export const findMoneyByPlayerId = async (req, res) => {
 };
 
 const accountDuplicateCheck = async (player_id) => {
-  const shard = await mainDbConnections();
-  const [rows] = await shard.query(SQL_QUERIES.FIND_USER_BY_PLAYER_ID, [player_id]);
-  if (rows.length > 0) {
-    return false;
+  try {
+    const shard = await mainDbConnections();
+    const [rows] = await shard.query(SQL_QUERIES.FIND_USER_BY_PLAYER_ID, [player_id]);
+    if (rows.length > 0) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error(error);
   }
-  return true;
 };

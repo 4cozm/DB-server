@@ -7,4 +7,5 @@ userRouter.get("/findUserByPlayerId", userController.findUserByPlayerId);
 userRouter.get("/findMoneyByPlayerId", userController.findMoneyByPlayerId);
 userRouter.post("/createUser", userController.createUser);
 userRouter.patch("/updateUserLogin", userController.updateUserLogin);
+userRouter.post("/createUserMoney", userController.createUserMoney);
 export default userRouter;

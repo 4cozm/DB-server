@@ -9,9 +9,13 @@ import { validTables, validDatabases } from "../utils/validate.js";
  * @return connections 기반의 shard 번호를 반환 (0,1,2...)
  */
 export const getShardNumber = async () => {
-  const connections = DbConnections();
-  const shards = await checkUpdateTime(connections);
-  return selectBestShard(shards);
+  try {
+    const connections = DbConnections();
+    const shards = await checkUpdateTime(connections);
+    return selectBestShard(shards);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 /**
