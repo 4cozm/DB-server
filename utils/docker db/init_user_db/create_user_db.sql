@@ -12,5 +12,5 @@ CREATE TABLE account (
 
 CREATE TABLE money (
     player_id VARCHAR(255) PRIMARY KEY,
-    money INT NOT NULL,
+    money INT NOT NULL
 )

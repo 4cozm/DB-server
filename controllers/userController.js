@@ -5,8 +5,8 @@ import formatDate from "../utils/dateFormatter.js";
 import { mainDbConnections } from "../db/connect.js";
 
 const SQL_QUERIES = {
-  FIND_USER_BY_PLAYER_ID: "SELECT * FROM account WHERE player_id = ?",
-  FIND_USER_BY_NAME: "SELECT * FROM account WHERE name = ?",
+  FIND_USER_BY_PLAYER_ID: "SELECT * FROM Shards WHERE `key` = ? AND `table` = 'account'",
+  FIND_USER_BY_NAME: "SELECT * FROM Shards WHERE name = ?",
   CREATE_USER: "INSERT INTO account (player_id, pw, name, guild) VALUES (?, ?, ?, ?)",
   UPDATE_USER_LOGIN: "UPDATE account SET last_login = CURRENT_TIMESTAMP WHERE player_id = ?",
   FIND_MONEY_BY_PLAYER_ID: "SELECT money FROM money WHERE player_id = ?",
@@ -107,14 +107,10 @@ export const findMoneyByPlayerId = async (req, res) => {
 };
 
 const accountDuplicateCheck = async (player_id) => {
-  try {
-    const shard = await mainDbConnections();
-    const [rows] = await shard.query(SQL_QUERIES.FIND_USER_BY_PLAYER_ID, [player_id]);
-    if (rows.length > 0) {
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error(error);
+  const shard = await mainDbConnections();
+  const [rows] = await shard.query(SQL_QUERIES.FIND_USER_BY_PLAYER_ID, [player_id]);
+  if (rows.length > 0) {
+    return false;
   }
+  return true;
 };
