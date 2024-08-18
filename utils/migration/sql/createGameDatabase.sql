@@ -94,7 +94,6 @@ INSERT INTO character_skills (skill_name, skill_type, character_id, damage_facto
 ('부활', 6, 4, NULL, 50, 1, NULL);
 
 
-
 CREATE TABLE IF NOT EXISTS item (
     item_id INT AUTO_INCREMENT PRIMARY KEY,
     item_name VARCHAR(255), 
