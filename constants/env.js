@@ -2,6 +2,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+export const HOST = process.env.HOST;
+export const PORT = process.env.PORT;
+
 export const SHARD_1_USER = process.env.AWS_SHARD_1_USER;
 export const SHARD_1_PASSWORD = process.env.AWS_SHARD_1_PASSWORD;
 export const SHARD_1_HOST = process.env.AWS_SHARD_1_HOST;

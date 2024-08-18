@@ -1,6 +1,8 @@
 import * as env from "../constants/env.js";
 
 export const config = {
+  HOST: env.HOST,
+  PORT: env.PORT,
   SHARDS: {
     1: {
       user: env.SHARD_1_USER,

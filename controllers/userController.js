@@ -30,9 +30,9 @@ export const findUserByPlayerId = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { player_id, pw, name } = req.body;
+    const { player_id, pw, name, guild } = req.body;
 
-    if (!player_id || !pw || !name) {
+    if (player_id == null || pw == null || name == null || guild == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
     const check = await accountDuplicateCheck(player_id);
