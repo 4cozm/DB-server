@@ -10,3 +10,5 @@ CREATE TABLE Shards (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_key_db_table ON Shards (`key`, `database`, `table`);

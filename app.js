@@ -6,9 +6,10 @@ import { connectMainDb, makeDbConnect } from "./db/connect.js";
 import webHookRouter from "./router/webHook.js";
 import { verifySignature } from "./utils/verifySignature.js";
 import bodyParser from "body-parser";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
-const PORT = 3000;
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -23,8 +24,8 @@ app.use("/api/user", userRouter);
 app.use("/api/game", gameRouter);
 app.use("/api/webhook", bodyParser.json({ verify: verifySignature }), webHookRouter);
 
-app.listen(PORT, async () => {
+app.listen(process.env.PORT, process.env.HOST, async () => {
   await makeDbConnect();
   await connectMainDb();
-  console.log("DB서버 시작됨 :", PORT);
+  console.log(`서버가 ${process.env.HOST}:${process.env.PORT}에서 시작됨`);
 });
