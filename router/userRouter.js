@@ -8,4 +8,6 @@ userRouter.get("/findMoneyByPlayerId", userController.findMoneyByPlayerId);
 userRouter.post("/createUser", userController.createUser);
 userRouter.patch("/updateUserLogin", userController.updateUserLogin);
 userRouter.post("/createUserMoney", userController.createUserMoney);
+userRouter.patch("/updateMoney", userController.updateMoney);
+
 export default userRouter;

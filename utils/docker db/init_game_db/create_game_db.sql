@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS rating (
 CREATE TABLE IF NOT EXISTS possession (
     possession_id INT AUTO_INCREMENT PRIMARY KEY,
     player_id VARCHAR(36),
-    character_id INT
+    character_id INT DEFAULT 0 CHECK (character_id >= 0 AND character_id <= 15)
 );
 
 CREATE TABLE IF NOT EXISTS match_log (

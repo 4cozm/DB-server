@@ -13,5 +13,5 @@ CREATE TABLE account (
 CREATE TABLE money (
     player_id VARCHAR(255) PRIMARY KEY,
     money INT NOT NULL,
-    FOREIGN KEY (player_id) REFERENCES account(player_id)
 );
+
