@@ -2,29 +2,10 @@ import { getShardByKey, saveShard } from "../db/shardUtils.js";
 import { getShardNumber } from "../db/shardUtils.js";
 import formatDate from "../utils/dateFormatter.js";
 import { DbConnections } from "../db/connect.js";
+import GAME_SQL_QUERIES from "./query/gameSqlQueries.js"
 
-const GAME_SQL_QUERIES = {
-  // FIND_USER_BY_DEVICE_ID: 'SELECT * FROM user WHERE device_id = ?',
-  // CREATE_USER: 'INSERT INTO user (id, device_id) VALUES (?, ?)',
-  // UPDATE_USER_LOGIN: 'UPDATE user SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-  // UPDATE_USER_LOCATION: 'UPDATE user SET x = ?, y = ? WHERE device_id = ?',
-  CREATE_MATCH_HISTORY:
-    "INSERT INTO match_history (game_session_id, player_id, `kill`, death, damage) VALUES(?, ?, ?, ?, ?)",
-  CREATE_MATCH_LOG:
-    "INSERT INTO match_log (game_session_id, red_player1_id, red_player2_id, blue_player1_id , blue_player2_id, winner_team, start_time, end_time) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
-  FIND_POSSESSION_BY_PLAYER_ID: "SELECT * FROM possession WHERE player_id = ?",
-  CREATE_POSSESSION: "INSERT INTO possession (player_id, character_id) VALUES(?, ?)",
-  CREATE_USER_SCORE: "INSERT INTO score (player_id, score) VALUES(?, ?)",
-  CREATE_USER_RATING: "INSERT INTO rating (player_id, character_id, win, lose) VALUES(?, ?, ?, ?)",
-  UPDATE_USER_SCORE: "UPDATE score SET score = ? WHERE player_id = ?",
-  UPDATE_USER_RATING: "UPDATE rating SET win = ?, lose = ? WHERE player_id = ? AND character_id = ?",
-  FIND_USER_SCORE_BY_PLAYER_ID: "SELECT * FROM score WHERE player_id = ?",
-  FIND_USER_RATING_BY_PLAYER_ID: "SELECT * FROM rating WHERE player_id = ?",
-  FIND_CHARACTERS_DATA: "SELECT * FROM `character`",
-  FIND_CHARACTERS_INFO: "SELECT * FROM `character` WHERE character_id=? ",
-  UPDATE_POSSESSION: "UPDATE possession SET character_id = ? WHERE player_id = ?",
-};
 
+//주의! 이미 유저의 테이블이 있다고 가정하고 사용하는 함수입니다 이후 담당자가 변경해주세요
 export const createMatchHistory = async (req, res) => {
   try {
     const { session_id, player_id, kill, death, damage } = req.body;
@@ -33,8 +14,8 @@ export const createMatchHistory = async (req, res) => {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
 
-    const shard = await getShardByKey(player_id, "GAME_DB", "match_history");
-    const log = await saveShard(shard, "GAME_DB", "match_history", GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, session_id, [
+    const connection = await getShardByKey(player_id, "GAME_DB", "match_history"); //이미 해당 테이블이 생성되어 있어야함
+    const log = await connection.query(GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, [
       session_id,
       player_id,
       kill,
