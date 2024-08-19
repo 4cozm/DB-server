@@ -288,9 +288,9 @@ export const updatePossession = async (req, res) => {
   }
   try {
     const connection = await getShardByKey(player_id, "GAME_DB", "possession");
-    const [charcater] = await connection.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [player_id]);
+    const [character] = await connection.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [player_id]);
     const [rows] = await connection.query(GAME_SQL_QUERIES.UPDATE_POSSESSION, [
-      charcater[0].character_id + character_id,
+      character[0].character_id + character_id,
       player_id,
     ]);
     if (rows.affectedRows === 0) {
