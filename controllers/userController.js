@@ -121,8 +121,8 @@ export const updateMoney = async (req, res) => {
       res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
     const connection = await getShardByKey(player_id, "USER_DB", "money");
-    const [rows] = await connection.query(SQL_QUERIES.UPDATE_MONEY, [player_id, money]);
-    res.status(200).json(money);
+    const [rows] = await connection.query(SQL_QUERIES.UPDATE_MONEY, [money, player_id]);
+    res.status(200).json(rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMessage: "유저의 돈을 수정하는 중 오류 발생 : " + error });
