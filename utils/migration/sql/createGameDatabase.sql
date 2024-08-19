@@ -7,14 +7,13 @@ CREATE TABLE IF NOT EXISTS score (
 );
 
 CREATE TABLE IF NOT EXISTS rating (
-    player_id VARCHAR(36),
+    player_id VARCHAR(36) ,
     character_id INT,
     win INT,
-    lose INT,
-    PRIMARY KEY (player_id, character_id)
+    lose INT
 );
 
-CREATE TABLE IF NOT EXISTS possession ( --비트 플래그 형식으로 변경
+CREATE TABLE IF NOT EXISTS possession (
     possession_id INT AUTO_INCREMENT PRIMARY KEY,
     player_id VARCHAR(36),
     character_id INT DEFAULT 0 CHECK (character_id >= 0 AND character_id <= 15)
@@ -36,8 +35,7 @@ CREATE TABLE IF NOT EXISTS match_history (
     player_id VARCHAR(36),
     `kill` INT,
     death INT,
-    damage INT,
-    PRIMARY KEY(game_session_id, player_id)
+    damage INT
 );
 
 CREATE TABLE IF NOT EXISTS `character` (
@@ -59,8 +57,7 @@ CREATE TABLE IF NOT EXISTS character_skills (
     damage_factor FLOAT NULL,
     cool_time INT,
     `range` INT NULL,
-    `scale` INT NULL,
-    FOREIGN KEY (character_id) REFERENCES `character`(character_id)
+    `scale` INT NULL
 );
 
 INSERT INTO `character` (character_name, hp, speed, power, defense, critical, price) VALUES 
