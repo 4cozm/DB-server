@@ -51,6 +51,7 @@ export const setToMainDb = async (key, shardNumber, database, table) => {
       [key, shardNumber, database, table]
     );
   } catch (error) {
+    console.error(error);
     throw error;
   }
 };

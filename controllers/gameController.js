@@ -247,14 +247,14 @@ export const getUserRating = async (req, res) => {
 
 export const findPossessionByPlayerID = async (req, res) => {
   try {
-    const { playerId } = req.body;
-    if (playerId == null) {
+    const { player_id } = req.query;
+    if (player_id == null) {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
-    const connection = await getShardByKey(playerId, "GAME_DB", "possession");
-    const [rows] = await connection.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [playerId]);
+    const connection = await getShardByKey(player_id, "GAME_DB", "possession");
+    const [rows] = await connection.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [player_id]);
     if (rows.length < 0) {
-      return res.status(404).json(`${playerId}유저를 찾지 못했습니다`);
+      return res.status(404).json(`${player_id}유저를 찾지 못했습니다`);
     }
     res.status(200).json(rows);
   } catch (error) {
@@ -288,7 +288,11 @@ export const updatePossession = async (req, res) => {
   }
   try {
     const connection = await getShardByKey(player_id, "GAME_DB", "possession");
-    const [rows] = await connection.query(GAME_SQL_QUERIES.CREATE_POSSESSION, [player_id, character_id]);
+    const [charcater] = await connection.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [player_id]);
+    const [rows] = await connection.query(GAME_SQL_QUERIES.UPDATE_POSSESSION, [
+      charcater[0].character_id + character_id,
+      player_id,
+    ]);
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }

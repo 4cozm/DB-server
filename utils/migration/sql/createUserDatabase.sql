@@ -13,5 +13,14 @@ CREATE TABLE account (
 CREATE TABLE money (
     player_id VARCHAR(255) PRIMARY KEY,
     money INT NOT NULL,
-    FOREIGN KEY (player_id) REFERENCES account(player_id)
+);
+
+CREATE TABLE IF NOT EXISTS inventory (
+    inventory_id INT AUTO_INCREMENT PRIMARY KEY,
+    player_id VARCHAR(255),
+    item_id INT,
+    item_sprite_name VARCHAR(255),
+    equipped_items BOOLEAN DEFAULT FALSE,
+    equip_slot VARCHAR(255),
+    FOREIGN KEY(player_id) REFERENCES account(player_id)
 );

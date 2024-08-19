@@ -9,9 +9,13 @@ import { validTables, validDatabases } from "../utils/validate.js";
  * @return connections 기반의 shard 번호를 반환 (0,1,2...)
  */
 export const getShardNumber = async () => {
-  const connections = DbConnections();
-  const shards = await checkUpdateTime(connections);
-  return selectBestShard(shards);
+  try {
+    const connections = DbConnections();
+    const shards = await checkUpdateTime(connections);
+    return selectBestShard(shards);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 /**
@@ -61,10 +65,9 @@ export const saveShard = async (shardNumber, database, table, query, key, value)
     await dbConnection.query(query, value);
     await setToMainDb(key, shardNumber, database, table);
 
-    await dbConnection.commit();
-
     const log = `${shardNumber}번 샤드,${database} , ${table}에 key:${key}, 저장: ${value}로 저장되었습니다`;
     console.log(log);
+    await dbConnection.commit();
     return log;
   } catch (error) {
     await dbConnection.rollback();
