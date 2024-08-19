@@ -8,8 +8,7 @@ const GAME_SQL_QUERIES = {
   // CREATE_USER: 'INSERT INTO user (id, device_id) VALUES (?, ?)',
   // UPDATE_USER_LOGIN: 'UPDATE user SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
   // UPDATE_USER_LOCATION: 'UPDATE user SET x = ?, y = ? WHERE device_id = ?',
-  CREATE_MATCH_HISTORY:
-    "INSERT INTO match_history (game_session_id, player_id, `kill`, death, damage) VALUES(?, ?, ?, ?, ?)",
+  CREATE_MATCH_HISTORY: "INSERT INTO match_history (game_session_id, player_id, `kill`, death, damage) VALUES(?, ?, ?, ?, ?)",
   CREATE_MATCH_LOG:
     "INSERT INTO match_log (game_session_id, red_player1_id, red_player2_id, blue_player1_id , blue_player2_id, winner_team, start_time, end_time) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
   FIND_POSSESSION_BY_PLAYER_ID: "SELECT * FROM possession WHERE player_id = ?",
@@ -23,6 +22,7 @@ const GAME_SQL_QUERIES = {
   FIND_CHARACTERS_DATA: "SELECT * FROM `character`",
   FIND_CHARACTERS_INFO: "SELECT * FROM `character` WHERE character_id=? ",
   UPDATE_POSSESSION: "UPDATE possession SET character_id = ? WHERE player_id = ?",
+  UPDATE_MONEY: "UPDATE money SET money = ? WHERE player_id = ?",
 };
 
 export const createMatchHistory = async (req, res) => {
@@ -51,8 +51,7 @@ export const createMatchHistory = async (req, res) => {
 
 export const createMatchLog = async (req, res) => {
   try {
-    const { session_id, red_player_1_id, red_player_2_id, blue_player_1_id, blue_player_2_id, win_team, start_time } =
-      req.body;
+    const { session_id, red_player_1_id, red_player_2_id, blue_player_1_id, blue_player_2_id, win_team, start_time } = req.body;
 
     if (
       session_id == null ||
@@ -93,10 +92,7 @@ export const createUserScore = async (req, res) => {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
     const shard = await getShardNumber();
-    const log = await saveShard(shard, "GAME_DB", "score", GAME_SQL_QUERIES.CREATE_USER_SCORE, player_id, [
-      player_id,
-      score,
-    ]);
+    const log = await saveShard(shard, "GAME_DB", "score", GAME_SQL_QUERIES.CREATE_USER_SCORE, player_id, [player_id, score]);
     res.status(201).json(log);
   } catch (error) {
     console.error(error);
@@ -111,12 +107,7 @@ export const createUserRating = async (req, res) => {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
     const shard = await getShardNumber();
-    const log = await saveShard(shard, "GAME_DB", "rating", GAME_SQL_QUERIES.CREATE_USER_RATING, player_id, [
-      player_id,
-      character_id,
-      win,
-      lose,
-    ]);
+    const log = await saveShard(shard, "GAME_DB", "rating", GAME_SQL_QUERIES.CREATE_USER_RATING, player_id, [player_id, character_id, win, lose]);
     res.status(201).json(log);
   } catch (error) {
     console.error(error);
@@ -276,10 +267,7 @@ export const createPossession = async (req, res) => {
       return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
     }
     const shard = await getShardNumber();
-    const log = await saveShard(shard, "GAME_DB", "possession", GAME_SQL_QUERIES.CREATE_POSSESSION, player_id, [
-      player_id,
-      character_id,
-    ]);
+    const log = await saveShard(shard, "GAME_DB", "possession", GAME_SQL_QUERIES.CREATE_POSSESSION, player_id, [player_id, character_id]);
     res.status(200).json(log);
   } catch (error) {
     console.error(error);
@@ -295,10 +283,7 @@ export const updatePossession = async (req, res) => {
   try {
     const connection = await getShardByKey(player_id, "GAME_DB", "possession");
     const [character] = await connection.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [player_id]);
-    const [rows] = await connection.query(GAME_SQL_QUERIES.UPDATE_POSSESSION, [
-      character[0].character_id + character_id,
-      player_id,
-    ]);
+    const [rows] = await connection.query(GAME_SQL_QUERIES.UPDATE_POSSESSION, [character[0].character_id + character_id, player_id]);
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
@@ -306,6 +291,41 @@ export const updatePossession = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ errorMessage: "updatePossession 오류 발생" + error });
+  }
+};
+
+export const purchaseCharacter = async (req, res) => {
+  const { player_id, character_id, money } = req.body;
+  if (player_id == null || character_id == null || money) {
+    return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+  }
+
+  const gameConnection = await getShardByKey(player_id, "GAME_DB", "possession");
+  const userConnection = await getShardByKey(player_id, "USER_DB", "money");
+  try {
+    await gameConnection.beginTransaction();
+    await userConnection.beginTransaction();
+
+    const [character] = await gameConnection.query(GAME_SQL_QUERIES.FIND_POSSESSION_BY_PLAYER_ID, [player_id]);
+    let [rows] = await gameConnection.query(GAME_SQL_QUERIES.UPDATE_POSSESSION, [character[0].character_id + character_id, player_id]);
+    if (rows.affectedRows === 0) {
+      return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
+    }
+
+    [rows] = await userConnection.query(GAME_SQL_QUERIES.UPDATE_MONEY, [money, player_id]);
+    if (rows.affectedRows === 0) {
+      return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
+    }
+
+    await gameConnection.commit();
+    await userConnection.commit();
+
+    res.status(200).json({ player_id, character_id, money });
+  } catch (error) {
+    gameConnection.rollback();
+    userConnection.rollback();
+    console.error(error);
+    res.status(500).json({ errorMessage: "purchaseCharacter 오류 발생" + error });
   }
 };
 
