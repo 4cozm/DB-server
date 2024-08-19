@@ -23,6 +23,5 @@ CREATE TABLE IF NOT EXISTS inventory (
     item_sprite_name VARCHAR(255),
     equipped_items BOOLEAN DEFAULT FALSE,
     equip_slot VARCHAR(255),
-    FOREIGN KEY(player_id) REFERENCES account(player_id)
 );
 
