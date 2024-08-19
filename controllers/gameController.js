@@ -25,6 +25,18 @@ const GAME_SQL_QUERIES = {
   UPDATE_POSSESSION: "UPDATE possession SET character_id = ? WHERE player_id = ?",
 };
 
+export const dbSaveTransaction = async (req, res) => {
+  const {winTeam, loseTeam, users, gameSessionId, winnerTeam, startTime, mapName} = req.body;
+  if (winTeam == null || loseTeam == null || users == null || gameSessionId == null || winnerTeam == null || startTime == null || mapName == null) {
+    return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+  }
+
+  await updateUserScore(winTeam, loseTeam);
+  await updateUserRating();
+  await createMatchHistory();
+  await createMatchLog();
+}
+
 export const createMatchHistory = async (req, res) => {
   try {
     const { sessionId, playerId, kill, death, damage } = req.body;
@@ -117,18 +129,17 @@ export const createUserRating = async (req, res) => {
   }
 };
 
-export const updateUserScore = async (req, res) => {
-  try {
-    const { playerId, score } = req.body;
-    if (playerId == null || score == null) {
-      return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
-    }
-    const connection = getShardByKey(playerId, "GAME_DB", "score");
-    await connection.query(GAME_SQL_QUERIES.UPDATE_USER_SCORE, [score, playerId]);
-    res.status(200).json({ playerId, score });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ errorMessage: "updateUserScore 오류 발생" + error });
+export const updateUserScore = async (winTeam, loseTeam) => {
+  for (const user of winTeam) {
+    try {
+      const connection = getShardByKey(user.playerId, "GAME_DB", "score");
+      const score = getUserScore();
+      await connection.query(GAME_SQL_QUERIES.UPDATE_USER_SCORE, [score, playerId]);
+      res.status(200).json({ playerId, score });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ errorMessage: "updateUserScore 오류 발생" + error });
+  }
   }
 };
 
@@ -153,22 +164,17 @@ export const updateUserRating = async (req, res) => {
   }
 };
 
-export const getUserScore = async (req, res) => {
+export const getUserScore = async (playerId) => {
   //최종 프로젝트 파일과 함수명 다름 findUserScoreTable
   try {
-    const { playerId } = req.body;
-    if (playerId == null) {
-      return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
-    }
     const connection = await getShardByKey(playerId, "GAME_DB", "score");
     const [rows] = await connection.query(GAME_SQL_QUERIES.FIND_USER_SCORE_BY_PLAYER_ID, [playerId]);
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
-    res.status(200).json(rows[0]);
+    return rows[0];
   } catch (error) {
     console.error(error);
-    res.status(500).json({ errorMessage: "findUserScoreTable 오류 발생" + error });
   }
 };
 
