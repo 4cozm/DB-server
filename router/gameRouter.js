@@ -3,11 +3,8 @@ import * as gameController from "../controllers/gameController.js";
 
 const gameRouter = express.Router();
 
-gameRouter.post("/createMatchHistory", gameController.createMatchHistory);
-gameRouter.post("/createMatchLog", gameController.createMatchLog);
 gameRouter.post("/createUserScore", gameController.createUserScore);
 gameRouter.post("/createUserRating", gameController.createUserRating);
-gameRouter.get("/getUserRating", gameController.getUserRating);
 // gameRouter.post("/createCharacter", gameController.createCharacter);
 gameRouter.post("/createPossession", gameController.createPossession);
 gameRouter.get("/findCharacterData", gameController.findCharacterData);
