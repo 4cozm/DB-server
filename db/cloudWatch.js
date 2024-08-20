@@ -1,6 +1,6 @@
-import { CloudWatchClient, GetMetricDataCommand } from '@aws-sdk/client-cloudwatch';
+import { CloudWatchClient, GetMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 
-const client = new CloudWatchClient({ region: 'ap-northeast-2' });
+const client = new CloudWatchClient({ region: "ap-northeast-2" });
 export class ShardData {
   constructor(shardName) {
     this.shardName = shardName;
@@ -20,20 +20,20 @@ export class ShardData {
       const command = new GetMetricDataCommand({
         MetricDataQueries: [
           {
-            Id: 'm1',
+            Id: "m1",
             MetricStat: {
               Metric: {
-                Namespace: 'AWS/RDS',
-                MetricName: 'CPUUtilization',
+                Namespace: "AWS/RDS",
+                MetricName: "CPUUtilization",
                 Dimensions: [
                   {
-                    Name: 'DBInstanceIdentifier',
+                    Name: "DBInstanceIdentifier",
                     Value: this.shardName,
                   },
                 ],
               },
               Period: 60,
-              Stat: 'Average',
+              Stat: "Average",
             },
             ReturnData: true,
           },
@@ -50,11 +50,11 @@ export class ShardData {
         this.cpuUsage = mostRecentValue;
         return mostRecentValue;
       } else {
-        console.log('CPU 기록을 불러오는데 실패했습니다.');
+        console.log("CPU 기록을 불러오는데 실패했습니다.");
         return null;
       }
     } catch (error) {
-      console.error('에러 발생', error);
+      console.error("에러 발생", error);
       return null;
     }
   }
@@ -65,20 +65,20 @@ export class ShardData {
       const command = new GetMetricDataCommand({
         MetricDataQueries: [
           {
-            Id: 'freeStorageSpace',
+            Id: "freeStorageSpace",
             MetricStat: {
               Metric: {
-                Namespace: 'AWS/RDS',
-                MetricName: 'FreeStorageSpace',
+                Namespace: "AWS/RDS",
+                MetricName: "FreeStorageSpace",
                 Dimensions: [
                   {
-                    Name: 'DBInstanceIdentifier',
+                    Name: "DBInstanceIdentifier",
                     Value: this.shardName,
                   },
                 ],
               },
               Period: 60 * 60, // 1시간 간격으로 데이터 집계
-              Stat: 'Average',
+              Stat: "Average",
             },
             ReturnData: true,
           },
@@ -95,11 +95,11 @@ export class ShardData {
 
         return result;
       } else {
-        console.error('저장 공간에 대한 조회 실패');
+        console.error("저장 공간에 대한 조회 실패");
         return null;
       }
     } catch (error) {
-      console.error('에러 발생', error);
+      console.error("에러 발생", error);
       return null;
     }
   }
