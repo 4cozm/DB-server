@@ -15,6 +15,7 @@ gameRouter.post("/createPossession", gameController.createPossession);
 gameRouter.get("/findCharacterData", gameController.findCharacterData);
 gameRouter.get("/findCharacterInfo", gameController.findCharacterInfo);
 gameRouter.patch("/updatePossession", gameController.updatePossession);
+gameRouter.patch("/purchaseCharacter", gameController.purchaseCharacter);
 gameRouter.get("/findPossessionByPlayerID", gameController.findPossessionByPlayerID);
 
 export default gameRouter;
