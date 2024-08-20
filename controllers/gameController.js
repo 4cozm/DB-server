@@ -1,9 +1,8 @@
-import { getShardByKey, saveShard } from "../db/shardUtils.js";
-import { getShardNumber } from "../db/shardUtils.js";
-import formatDate from "../utils/dateFormatter.js";
-import { DbConnections } from "../db/connect.js";
-import GAME_SQL_QUERIES from "./query/gameSqlQueries.js"
-
+import { getShardByKey, saveShard } from '../db/shardUtils.js';
+import { getShardNumber } from '../db/shardUtils.js';
+import formatDate from '../utils/dateFormatter.js';
+import { DbConnections } from '../db/connect.js';
+import GAME_SQL_QUERIES from './query/gameSqlQueries.js';
 
 //주의! 이미 유저의 테이블이 있다고 가정하고 사용하는 함수입니다 이후 담당자가 변경해주세요
 export const createMatchHistory = async (req, res) => {
@@ -11,10 +10,10 @@ export const createMatchHistory = async (req, res) => {
     const { session_id, player_id, kill, death, damage } = req.body;
 
     if (session_id == null || player_id == null || kill == null || death == null || damage == null) {
-      return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+      return res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
     }
 
-    const connection = await getShardByKey(player_id, "GAME_DB", "match_history"); //이미 해당 테이블이 생성되어 있어야함
+    const connection = await getShardByKey(player_id, 'GAME_DB', 'match_history'); //이미 해당 테이블이 생성되어 있어야함
     const log = await connection.query(GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, [
       session_id,
       player_id,
@@ -26,34 +25,8 @@ export const createMatchHistory = async (req, res) => {
     res.status(200).json(log);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ errorMessage: "createMatchHistory 오류 발생: " + error });
-import { getShardByKey, saveShard } from '../db/shardUtils.js';
-import { getShardNumber } from '../db/shardUtils.js';
-import formatDate from '../utils/dateFormatter.js';
-import { DbConnections } from '../db/connect.js';
-import { findMoneyByPlayerId, SQL_QUERIES } from './userController.js';
-
-export const GAME_SQL_QUERIES = {
-  // FIND_USER_BY_DEVICE_ID: 'SELECT * FROM user WHERE device_id = ?',
-  // CREATE_USER: 'INSERT INTO user (id, device_id) VALUES (?, ?)',
-  // UPDATE_USER_LOGIN: 'UPDATE user SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-  // UPDATE_USER_LOCATION: 'UPDATE user SET x = ?, y = ? WHERE device_id = ?',
-  CREATE_MATCH_HISTORY:
-    'INSERT INTO match_history (game_session_id, player_id, `kill`, death, damage) VALUES(?, ?, ?, ?, ?)',
-  CREATE_MATCH_LOG:
-    'INSERT INTO match_log (game_session_id, green_player1_id, green_player2_id, blue_player1_id , blue_player2_id, winner_team, map_name, start_time, end_time) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',
-  FIND_POSSESSION_BY_PLAYER_ID: 'SELECT * FROM possession WHERE player_id = ?',
-  CREATE_POSSESSION: 'INSERT INTO possession (player_id, character_id) VALUES(?, ?)',
-  CREATE_USER_SCORE: 'INSERT INTO score (player_id, score) VALUES(?, ?)',
-  CREATE_USER_RATING: 'INSERT INTO rating (player_id, character_id, win, lose) VALUES(?, ?, ?, ?)',
-  UPDATE_USER_SCORE: 'UPDATE score SET score = ? WHERE player_id = ?',
-  UPDATE_USER_RATING: 'UPDATE rating SET win = ?, lose = ? WHERE player_id = ? AND character_id = ?',
-  FIND_USER_SCORE_BY_PLAYER_ID: 'SELECT * FROM score WHERE player_id = ?',
-  FIND_USER_RATING_BY_PLAYER_ID: 'SELECT * FROM rating WHERE player_id = ?',
-  FIND_CHARACTERS_DATA: 'SELECT * FROM `character`',
-  FIND_CHARACTERS_INFO: 'SELECT * FROM `character` WHERE character_id=? ',
-  UPDATE_POSSESSION: 'UPDATE possession SET character_id = ? WHERE player_id = ?',
-  UPDATE_MONEY: 'UPDATE money SET money = ? WHERE player_id = ?',
+    res.status(500).json({ errorMessage: 'createMatchHistory 오류 발생: ' + error });
+  }
 };
 
 export const dbSaveTransaction = async (req, res) => {
@@ -69,31 +42,32 @@ export const dbSaveTransaction = async (req, res) => {
   ) {
     return res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
   }
+  try {
+    await Promise.all([
+      await updateUserScore(win_team, lose_team),
+      await updateUserRating(win_team, lose_team),
+      await createMatchHistory(users, session_id),
+      await createMatchLog(session_id, win_team, lose_team, win_team_color, start_time, map_name),
+      await gameEndUpdateUserMoney(users),
+    ]);
 
-  await updateUserScore(win_team, lose_team);
-  await updateUserRating(win_team, lose_team);
-  await createMatchHistory(users, session_id);
-  await createMatchLog(session_id, win_team, lose_team, win_team_color, start_time, map_name);
-  await gameEndUpdateUserMoney(users);
+    res.status(200).json({ message: '대전 결과 db 저장 완료!' });
+  } catch (error) {
+    console.error('dbSaveTransaction 에러 발생', error);
+    const errorData = {
+      win_team,
+      lose_team,
+      users,
+      session_id,
+      win_team_color,
+      start_time,
+      map_name,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    };
 
-  res.status(200).json({ message: '대전 결과 db 저장 완료!' });
-};
-
-export const createMatchHistory = async (users, session_id) => {
-  for (const user of users) {
-    try {
-      const connection = await getShardByKey(user.playerId, 'GAME_DB', 'match_history');
-      await connection.query(GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, [
-        session_id,
-        user.playerId,
-        user.kill,
-        user.death,
-        user.damage,
-      ]);
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    await saveErrorDataToFile(errorData, session_id);
+    res.status(500).json({ errorMessage: 'dbSaveTransaction 에러 발생', error });
   }
 };
 
@@ -206,13 +180,13 @@ export const gameEndUpdateUserMoney = async (users) => {
       const connection = await getShardByKey(user.playerId, 'USER_DB', 'money');
       const [userMoney] = await connection.query(SQL_QUERIES.FIND_MONEY_BY_PLAYER_ID, [user.playerId]);
       console.log(userMoney);
-      await connection.query(SQL_QUERIES.UPDATE_MONEY, [userMoney[0].money + 5000, user.playerId])
+      await connection.query(SQL_QUERIES.UPDATE_MONEY, [userMoney[0].money + 5000, user.playerId]);
     } catch (error) {
       console.error(error);
       throw error;
     }
   }
-}
+};
 
 // 해당 기능은 챔피언? 영웅을 만드는 기능인데, 지금은 해당 데이터를 바로 저장해둔 상태라서 추가하는 기능은 불필요하다고 생각했음(사용하려면 구조 변경해야함)
 // export const createCharacter = async (req, res) => {
