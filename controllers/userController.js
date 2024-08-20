@@ -60,8 +60,17 @@ export const createUser = async (req, res) => {
     // main DB에 샤드 껍데기만 생성
     await setToMainDb(player_id, shardNumber, 'USER_DB', 'inventory');
     await setToMainDb(player_id, shardNumber, 'GAME_DB', 'match_history');
-    await saveShard(shardNumber, "GAME_DB", 'rating', GAME_SQL_QUERIES.CREATE_USER_RATING, player_id, [player_id, character_id, 0, 0]);
-    await saveShard(shardNumber, "GAME_DB", 'score', GAME_SQL_QUERIES.CREATE_USER_SCORE, player_id, [player_id, 0]);
+
+    //레이팅 생성
+    await saveShard(shardNumber, 'GAME_DB', 'rating', GAME_SQL_QUERIES.CREATE_USER_RATING, player_id, [
+      player_id,
+      character_id,
+      0,
+      0,
+    ]);
+
+    //점수 생성
+    await saveShard(shardNumber, 'GAME_DB', 'score', GAME_SQL_QUERIES.CREATE_USER_SCORE, player_id, [player_id, 0]);
 
     // 계정 생성
     await saveShard(shardNumber, 'USER_DB', 'account', SQL_QUERIES.CREATE_USER, player_id, [
