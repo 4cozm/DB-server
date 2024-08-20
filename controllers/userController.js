@@ -31,10 +31,13 @@ export const findUserByPlayerId = async (req, res) => {
     const shard = await getShardByKey(player_id, 'USER_DB', 'account');
 
     const [rows] = await shard.query(SQL_QUERIES.FIND_USER_BY_PLAYER_ID, [player_id]);
+    if (rows.length === 0) {
+      fatalError('', 'main DB에는 유저가 존재하지만 샤드에 해당 유저의 정보가 존재하지 않습니다');
+    }
     res.status(200).json(rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, errorCode: ErrorCodes.USER_NOT_FOUND });
   }
 };
 
@@ -60,8 +63,13 @@ export const createUser = async (req, res) => {
     // main DB에 샤드 껍데기만 생성
     await setToMainDb(player_id, shardNumber, 'USER_DB', 'inventory');
     await setToMainDb(player_id, shardNumber, 'GAME_DB', 'match_history');
-    await saveShard(shardNumber, "GAME_DB", 'rating', GAME_SQL_QUERIES.CREATE_USER_RATING, player_id, [player_id, character_id, 0, 0]);
-    await saveShard(shardNumber, "GAME_DB", 'score', GAME_SQL_QUERIES.CREATE_USER_SCORE, player_id, [player_id, 0]);
+    await saveShard(shardNumber, 'GAME_DB', 'rating', GAME_SQL_QUERIES.CREATE_USER_RATING, player_id, [
+      player_id,
+      character_id,
+      0,
+      0,
+    ]);
+    await saveShard(shardNumber, 'GAME_DB', 'score', GAME_SQL_QUERIES.CREATE_USER_SCORE, player_id, [player_id, 0]);
 
     // 계정 생성
     await saveShard(shardNumber, 'USER_DB', 'account', SQL_QUERIES.CREATE_USER, player_id, [
@@ -90,9 +98,7 @@ export const createUser = async (req, res) => {
     connections['USER_DB'].rollback();
     mainConnections.rollback();
     console.error(error);
-    res
-      .status(500)
-      .json({ message: '계정 생성중 오류 발생', error: error.message, errorCode: error.errorCode || 10060 });
+    res.status(500).json({ message: '계정 생성중 오류 발생', error: error.message, errorCode: error.errorCode });
   }
 };
 
