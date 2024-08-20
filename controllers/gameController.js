@@ -109,8 +109,8 @@ export const createUserRating = async (req, res) => {
 export const updateUserScore = async (win_team, lose_team) => {
   for (const user of win_team) {
     try {
-      const connection = getShardByKey(user.playerId, "GAME_DB", "score");
-      const score = getUserScore(user.playerId);
+      const connection = await getShardByKey(user.playerId, "GAME_DB", "score");
+      const score = await getUserScore(user.playerId);
       await connection.query(GAME_SQL_QUERIES.UPDATE_USER_SCORE, [score + 50, user.playerId]);
     } catch (error) {
       console.error(error);
@@ -119,8 +119,8 @@ export const updateUserScore = async (win_team, lose_team) => {
   }
   for (const user of lose_team) {
     try {
-      const connection = getShardByKey(user.playerId, "GAME_DB", "score");
-      let score = getUserScore(user.playerId);
+      const connection = await getShardByKey(user.playerId, "GAME_DB", "score");
+      let score = await getUserScore(user.playerId);
       if (score - 25 <= 0) {
         score = 0;
         await connection.query(GAME_SQL_QUERIES.UPDATE_USER_SCORE, [score, user.playerId]);
@@ -138,7 +138,7 @@ export const updateUserRating = async (win_team, lose_team) => {
   for (const user of win_team) {
     try {
       const connection = await getShardByKey(user.playerId, "GAME_DB", "rating");
-      const rating = getUserRating(user.playerId);
+      const rating = await getUserRating(user.playerId);
       await connection.query(GAME_SQL_QUERIES.UPDATE_USER_RATING, [++rating.win, rating.lose, user.playerId, user.characterId]);
     } catch (error) {
       console.error(error);
@@ -148,7 +148,7 @@ export const updateUserRating = async (win_team, lose_team) => {
   for (const user of lose_team) {
     try {
       const connection = await getShardByKey(user.playerId, "GAME_DB", "rating");
-      const rating = getUserRating(user.playerId);
+      const rating = await getUserRating(user.playerId);
       await connection.query(GAME_SQL_QUERIES.UPDATE_USER_RATING, [rating.win, ++rating.lose, user.playerId, user.characterId]);
     } catch (error) {
       console.error(error);
@@ -162,9 +162,6 @@ export const getUserScore = async (playerId) => {
   try {
     const connection = await getShardByKey(playerId, "GAME_DB", "score");
     const [rows] = await connection.query(GAME_SQL_QUERIES.FIND_USER_SCORE_BY_PLAYER_ID, [playerId]);
-    if (rows.affectedRows === 0) {
-      return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
-    }
     return rows[0];
   } catch (error) {
     console.error(error);
