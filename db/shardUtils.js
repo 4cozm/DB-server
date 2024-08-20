@@ -1,8 +1,10 @@
-import config from "../config/config.js";
-import fatalError from "../error/fatalError.js";
-import { DbConnections, mainDbConnections } from "./connect.js";
-import { getToMainDb, setToMainDb } from "./main.js";
-import { validTables, validDatabases } from "../utils/validate.js";
+import config from '../config/config.js';
+import fatalError from '../error/fatalError.js';
+import { DbConnections, mainDbConnections } from './connect.js';
+import { getToMainDb, setToMainDb } from './main.js';
+import { validTables, validDatabases } from '../utils/validate.js';
+import { CustomError } from '../error/customError.js';
+import { ErrorCodes } from '../error/errorCodes.js';
 
 /**
  * 가장 최적의 샤드 객체 번호를 가져오는 함수
@@ -48,7 +50,7 @@ export const getShardNumber = async () => {
 export const saveShard = async (shardNumber, database, table, query, key, value) => {
   // 데이터베이스 값이 유효한지 확인
   if (!validDatabases.includes(database)) {
-    throw new Error(`올바르지 않은 데이터 베이스: ${database}. 가능한 값 ${validDatabases.join(", ")}.`);
+    throw new Error(`올바르지 않은 데이터 베이스: ${database}. 가능한 값 ${validDatabases.join(', ')}.`);
   }
   if (!validTables[database].includes(table)) {
     throw new Error(`올바르지 않은 테이블: ${table} 가능 한 값: ${validTables[database]}`);
@@ -71,8 +73,8 @@ export const saveShard = async (shardNumber, database, table, query, key, value)
     return log;
   } catch (error) {
     await dbConnection.rollback();
-    if (error.code === "ER_DUP_ENTRY") {
-      throw new Error("중복된 저장 입니다");
+    if (error.code === 'ER_DUP_ENTRY') {
+      throw new Error('중복된 저장 입니다');
     } else {
       throw new Error(error);
     }
@@ -105,10 +107,16 @@ export const saveShard = async (shardNumber, database, table, query, key, value)
  */
 export const getShardByKey = async (key, database, table) => {
   if (!validDatabases.includes(database)) {
-    throw new Error(`올바르지 않은 데이터 베이스: ${database}. 가능한 값 ${validDatabases.join(", ")}.`);
+    throw new CustomError(
+      `올바르지 않은 데이터 베이스: ${database}. 가능한 값 ${validDatabases.join(', ')}.`,
+      ErrorCodes.INVALID_DATABASE,
+    );
   }
   if (!validTables[database].includes(table)) {
-    throw new Error(`올바르지 않은 테이블: ${table} 가능 한 값: ${validTables[database]}`);
+    throw new CustomError(
+      `올바르지 않은 테이블: ${table} 가능 한 값: ${validTables[database]}`,
+      ErrorCodes.INVALID_TABLE,
+    );
   }
 
   try {
@@ -116,7 +124,13 @@ export const getShardByKey = async (key, database, table) => {
     const connections = DbConnections();
     return connections[result][database];
   } catch (error) {
-    throw new Error(error);
+    if (error instanceof CustomError) {
+      // 이미 CustomError라면 그대로 던짐
+      throw error;
+    } else {
+      // 새로운 CustomError로 포장
+      throw new CustomError(error.message, ErrorCodes.UNKNOWN_ERROR);
+    }
   }
 };
 
@@ -144,14 +158,14 @@ const getPrimaryKey = async (connection, type, table) => {
     const [rows] = await connection.execute(query, [type, table]);
     return rows[0].COLUMN_NAME;
   } catch (error) {
-    console.error("프라이머리 키를 가지고 오는데 실패했습니다", error);
-    throw new Error(error);
+    console.error('프라이머리 키를 가지고 오는데 실패했습니다', error);
+    throw new CustomError(error);
   }
 };
 
 const selectBestShard = (shards) => {
   if (Object.keys(shards).length <= 0) {
-    throw new Error("샤드의 정보가 존재하지 않습니다");
+    throw new CustomError('샤드의 정보가 존재하지 않습니다');
   }
   let result;
   let biggestStorage = 0;
@@ -164,7 +178,7 @@ const selectBestShard = (shards) => {
   });
 
   if (result.cpu > 80) {
-    console.log("cpu 과부하로 인해 CPU 점유율이 가장 낮은곳에 저장합니다");
+    console.log('cpu 과부하로 인해 CPU 점유율이 가장 낮은곳에 저장합니다');
     Object.keys(shards).forEach((key) => {
       const shard = shards[key];
 
