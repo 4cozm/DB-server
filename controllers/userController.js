@@ -8,7 +8,7 @@ import { CustomError } from '../error/customError.js';
 import { setToMainDb } from '../db/main.js';
 import { GAME_SQL_QUERIES } from './gameController.js';
 
-const SQL_QUERIES = {
+export const SQL_QUERIES = {
   FIND_USER_BY_PLAYER_ID: 'SELECT * FROM account WHERE `player_id` = ?',
   CHECK_DUPLICATE_PLAYER_ID: 'SELECT * FROM Shards WHERE `Key` = ? AND `database` = ? AND`table` = ?',
   FIND_USER_BY_NAME: 'SELECT * FROM Shards WHERE name = ?',

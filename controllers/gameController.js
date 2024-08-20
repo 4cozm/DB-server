@@ -2,6 +2,7 @@ import { getShardByKey, saveShard } from '../db/shardUtils.js';
 import { getShardNumber } from '../db/shardUtils.js';
 import formatDate from '../utils/dateFormatter.js';
 import { DbConnections } from '../db/connect.js';
+import { findMoneyByPlayerId, SQL_QUERIES } from './userController.js';
 
 export const GAME_SQL_QUERIES = {
   // FIND_USER_BY_DEVICE_ID: 'SELECT * FROM user WHERE device_id = ?',
@@ -44,6 +45,7 @@ export const dbSaveTransaction = async (req, res) => {
   await updateUserRating(win_team, lose_team);
   await createMatchHistory(users, session_id);
   await createMatchLog(session_id, win_team, lose_team, win_team_color, start_time, map_name);
+  await gameEndUpdateUserMoney(users);
 
   res.status(200).json({ message: '대전 결과 db 저장 완료!' });
 };
@@ -168,6 +170,20 @@ export const getUserRating = async (player_id) => {
     console.error(error);
   }
 };
+
+export const gameEndUpdateUserMoney = async (users) => {
+  for (const user of users) {
+    try {
+      const connection = await getShardByKey(user.playerId, 'USER_DB', 'money');
+      const [userMoney] = await connection.query(SQL_QUERIES.FIND_MONEY_BY_PLAYER_ID, [user.playerId]);
+      console.log(userMoney);
+      await connection.query(SQL_QUERIES.UPDATE_MONEY, [userMoney[0].money + 5000, user.playerId])
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
 
 // 해당 기능은 챔피언? 영웅을 만드는 기능인데, 지금은 해당 데이터를 바로 저장해둔 상태라서 추가하는 기능은 불필요하다고 생각했음(사용하려면 구조 변경해야함)
 // export const createCharacter = async (req, res) => {
