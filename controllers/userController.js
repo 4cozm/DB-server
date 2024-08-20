@@ -6,8 +6,9 @@ import { DbConnections, mainDbConnections } from '../db/connect.js';
 import { ErrorCodes } from '../error/errorCodes.js';
 import { CustomError } from '../error/customError.js';
 import { setToMainDb } from '../db/main.js';
+import { GAME_SQL_QUERIES } from './gameController.js';
 
-const SQL_QUERIES = {
+export const SQL_QUERIES = {
   FIND_USER_BY_PLAYER_ID: 'SELECT * FROM account WHERE `player_id` = ?',
   CHECK_DUPLICATE_PLAYER_ID: 'SELECT * FROM Shards WHERE `Key` = ? AND `database` = ? AND`table` = ?',
   FIND_USER_BY_NAME: 'SELECT * FROM Shards WHERE name = ?',
@@ -58,9 +59,9 @@ export const createUser = async (req, res) => {
 
     // main DB에 샤드 껍데기만 생성
     await setToMainDb(player_id, shardNumber, 'USER_DB', 'inventory');
-    await setToMainDb(player_id, shardNumber, 'GAME_DB', 'rating');
-    await setToMainDb(player_id, shardNumber, 'GAME_DB', 'score');
     await setToMainDb(player_id, shardNumber, 'GAME_DB', 'match_history');
+    await saveShard(shardNumber, "GAME_DB", 'rating', GAME_SQL_QUERIES.CREATE_USER_RATING, player_id, [player_id, character_id, 0, 0]);
+    await saveShard(shardNumber, "GAME_DB", 'score', GAME_SQL_QUERIES.CREATE_USER_SCORE, player_id, [player_id, 0]);
 
     // 계정 생성
     await saveShard(shardNumber, 'USER_DB', 'account', SQL_QUERIES.CREATE_USER, player_id, [
