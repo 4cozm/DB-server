@@ -1,24 +1,11 @@
-import { getShardByKey, getShardNumber, saveShard } from '../db/shardUtils.js';
-import { toCamelCase } from '../utils/transformCase.js';
-import fatalError from '../error/fatalError.js';
-import formatDate from '../utils/dateFormatter.js';
-import { DbConnections, mainDbConnections } from '../db/connect.js';
-import { ErrorCodes } from '../error/errorCodes.js';
-import { CustomError } from '../error/customError.js';
-import { setToMainDb } from '../db/main.js';
-import { GAME_SQL_QUERIES } from './gameController.js';
-
-export const SQL_QUERIES = {
-  FIND_USER_BY_PLAYER_ID: 'SELECT * FROM account WHERE `player_id` = ?',
-  CHECK_DUPLICATE_PLAYER_ID: 'SELECT * FROM Shards WHERE `Key` = ? AND `database` = ? AND`table` = ?',
-  FIND_USER_BY_NAME: 'SELECT * FROM Shards WHERE name = ?',
-  CREATE_USER: 'INSERT INTO account (player_id, name, pw, guild) VALUES (?, ?, ?, ?)',
-  UPDATE_USER_LOGIN: 'UPDATE account SET last_login = CURRENT_TIMESTAMP WHERE player_id = ?',
-  FIND_MONEY_BY_PLAYER_ID: 'SELECT money FROM money WHERE player_id = ?',
-  UPDATE_MONEY: 'UPDATE money SET money = ? WHERE player_id = ?',
-  CREATE_USER_MONEY: 'INSERT INTO money (player_id, money) VALUES (?, ?)',
-  CREATE_POSSESSION: 'INSERT INTO possession (player_id, character_id) VALUES(?, ?)',
-};
+import { getShardByKey, getShardNumber, saveShard } from "../db/shardUtils.js";
+import { toCamelCase } from "../utils/transformCase.js";
+import fatalError from "../error/fatalError.js";
+import formatDate from "../utils/dateFormatter.js";
+import { mainDbConnections } from "../db/connect.js";
+import { ErrorCodes } from "../error/errorCodes.js";
+import { CustomError } from "../error/customError.js";
+import SQL_QUERIES from "./query/userSqlQueries.js";
 
 export const findUserByPlayerId = async (req, res) => {
   try {
