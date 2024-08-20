@@ -12,7 +12,7 @@ CREATE TABLE account (
 
 CREATE TABLE money (
     player_id VARCHAR(255) PRIMARY KEY,
-    money INT NOT NULL
+    money INT NOT NULL,
 );
 
 CREATE TABLE IF NOT EXISTS inventory (
@@ -21,5 +21,5 @@ CREATE TABLE IF NOT EXISTS inventory (
     item_id INT,
     item_sprite_name VARCHAR(255),
     equipped_items BOOLEAN DEFAULT FALSE,
-    equip_slot VARCHAR(255)
+    equip_slot VARCHAR(255),
 );

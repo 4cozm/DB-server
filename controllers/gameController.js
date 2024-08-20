@@ -1,9 +1,8 @@
 import { getShardByKey, saveShard } from '../db/shardUtils.js';
 import { getShardNumber } from '../db/shardUtils.js';
 import formatDate from '../utils/dateFormatter.js';
-import { DbConnections, mainDbConnections } from '../db/connect.js';
+import { DbConnections } from '../db/connect.js';
 import { findMoneyByPlayerId, SQL_QUERIES } from './userController.js';
-import { getToMainDb } from '../db/main.js';
 
 export const GAME_SQL_QUERIES = {
   // FIND_USER_BY_DEVICE_ID: 'SELECT * FROM user WHERE device_id = ?',
@@ -41,84 +40,14 @@ export const dbSaveTransaction = async (req, res) => {
   ) {
     return res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
   }
-  const mainDb = mainDbConnections();
-  const affectedShards = await searchForAffectedShards(users);
-  let connectionsToUse;
-  try {
-    connectionsToUse = affectedShards; // affectedShards는 { shardId: { GAME_DB, USER_DB } } 형태로 되어 있음
-    mainDb.beginTransaction();
-    for (const [shardKey, { GAME_DB, USER_DB }] of Object.entries(connectionsToUse)) {
-      await GAME_DB.beginTransaction();
-      await USER_DB.beginTransaction();
-    }
 
-    // 병렬로 처리할 수 있는 작업들
-    await Promise.all([
-      updateUserScore(connectionsToUse, win_team, lose_team),
-      updateUserRating(connectionsToUse, win_team, lose_team),
-      createMatchHistory(connectionsToUse, users, session_id),
-      createMatchLog(connectionsToUse, session_id, win_team, lose_team, win_team_color, start_time, map_name),
-      gameEndUpdateUserMoney(connectionsToUse, users),
-    ]);
-    throw Error('테스트');
+  await updateUserScore(win_team, lose_team);
+  await updateUserRating(win_team, lose_team);
+  await createMatchHistory(users, session_id);
+  await createMatchLog(session_id, win_team, lose_team, win_team_color, start_time, map_name);
+  await gameEndUpdateUserMoney(users);
 
-    for (const [shardKey, { GAME_DB, USER_DB }] of Object.entries(connectionsToUse)) {
-      await GAME_DB.commit();
-      await USER_DB.commit();
-    }
-    mainDb.commit();
-
-    res.status(200).json({ message: '대전 결과 DB 저장 완료!' });
-  } catch (error) {
-    if (connectionsToUse) {
-      for (const [shardKey, { GAME_DB, USER_DB }] of Object.entries(connectionsToUse)) {
-        try {
-          await GAME_DB.rollback();
-          await USER_DB.rollback();
-        } catch (rollbackError) {
-          console.error(`Rollback failed for shard ${shardKey}:`, rollbackError);
-        }
-      }
-    }
-    mainDb.rollback();
-
-    res.status(500).json({ errorMessage: '경기 결과를 저장하는 중 에러 발생', error });
-  }
-};
-
-const searchForAffectedShards = async (users) => {
-  // 현재 사용 가능한 샤드에 대한 정보를 불러옴
-  const shardObject = DbConnections();
-  const shards = Object.keys(shardObject)
-    .filter((key) => !isNaN(key))
-    .map(Number);
-  const affectedShards = new Set();
-
-  // 각 유저의 정보를 병렬로 조회
-  for (let i = 0; i < users.length; i++) {
-    const userShards = await Promise.all([
-      getToMainDb(users[i].playerId, 'GAME_DB', 'score'),
-      getToMainDb(users[i].playerId, 'GAME_DB', 'rating'),
-      getToMainDb(users[i].playerId, 'GAME_DB', 'match_history'),
-      getToMainDb(users[i].playerId, 'USER_DB', 'money'),
-    ]);
-
-    // 샤드를 추가
-    userShards.forEach((shard) => affectedShards.add(shard));
-
-    // 모든 샤드를 확인한 경우
-    if (affectedShards.size === shards.length) {
-      return Object.values(shardObject); // 전체 샤드 객체의 값을 배열로 반환
-    }
-  }
-
-  // 필요한 샤드의 정보만 리턴
-  const result = {};
-  affectedShards.forEach((shard) => {
-    result[shard] = shardObject[shard];
-  });
-
-  return Object.values(result);
+  res.status(200).json({ message: '대전 결과 db 저장 완료!' });
 };
 
 export const createMatchHistory = async (users, session_id) => {
@@ -247,13 +176,14 @@ export const gameEndUpdateUserMoney = async (users) => {
     try {
       const connection = await getShardByKey(user.playerId, 'USER_DB', 'money');
       const [userMoney] = await connection.query(SQL_QUERIES.FIND_MONEY_BY_PLAYER_ID, [user.playerId]);
-      await connection.query(SQL_QUERIES.UPDATE_MONEY, [userMoney[0].money + 5000, user.playerId]);
+      console.log(userMoney);
+      await connection.query(SQL_QUERIES.UPDATE_MONEY, [userMoney[0].money + 5000, user.playerId])
     } catch (error) {
       console.error(error);
       throw error;
     }
   }
-};
+}
 
 // 해당 기능은 챔피언? 영웅을 만드는 기능인데, 지금은 해당 데이터를 바로 저장해둔 상태라서 추가하는 기능은 불필요하다고 생각했음(사용하려면 구조 변경해야함)
 // export const createCharacter = async (req, res) => {
