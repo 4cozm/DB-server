@@ -86,7 +86,7 @@ INSERT INTO character_skills (skill_name, skill_type, character_id, damage_facto
 ('기절기', 7, 3, NULL, 5, 1.5, NULL, 2, 2);
 
 -- 힐씨 아줌마 스킬 데이터 삽입
-INSERT INTO character_skills (skill_name, skill_type, character_id, damage_factor, cool_time, range_x, speed, range_y) VALUES
+INSERT INTO character_skills (skill_name, skill_type, character_id, damage_factor, cool_time, duration, speed, range_x, range_y) VALUES
 ('물 뿌리기', 2, 4, 1, 1, NULL, 10, 1.2, 1.2),
 ('새참', 5, 4, 1, 5, 3, NULL, 1, 1);
 
