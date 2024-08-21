@@ -18,6 +18,8 @@ const GAME_SQL_QUERIES = {
   FIND_CHARACTERS_DATA: "SELECT * FROM `character`",
   FIND_CHARACTERS_INFO: "SELECT * FROM `character` WHERE character_id=? ",
   UPDATE_POSSESSION: "UPDATE possession SET character_id = ? WHERE player_id = ?",
+  FIND_ALL_ITEMS: 'SELECT * FROM item',
+  FIND_ITEM_STATS: 'SELECT * FROM item WHERE item_id = ?',
 };
 
 export default GAME_SQL_QUERIES;
