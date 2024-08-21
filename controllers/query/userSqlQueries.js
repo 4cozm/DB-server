@@ -8,6 +8,7 @@ const SQL_QUERIES = {
   UPDATE_MONEY: "UPDATE money SET money = ? WHERE player_id = ?",
   CREATE_USER_MONEY: "INSERT INTO money (player_id, money) VALUES (?, ?)",
   FIND_USER_INVENTORY_BY_PLAYER_ID: 'SELECT * FROM inventory WHERE player_id = ?',
+  INSERT_ITEM_INVENTORY: "INSERT INTO inventory (player_id, item_id, item_sprite_name, equip_slot) VALUES (?, ?, ?, ?)",
 };
 
 export default SQL_QUERIES;
