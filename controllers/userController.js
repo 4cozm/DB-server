@@ -73,7 +73,7 @@ export const createUser = async (req, res) => {
     await saveShard(shardNumber, 'USER_DB', 'money', SQL_QUERIES.CREATE_USER_MONEY, player_id, [player_id, money]);
 
     //소유 캐릭터 생성
-    await saveShard(shardNumber, 'GAME_DB', 'possession', SQL_QUERIES.CREATE_POSSESSION, player_id, [
+    await saveShard(shardNumber, 'GAME_DB', 'possession', GAME_SQL_QUERIES.CREATE_POSSESSION, player_id, [
       player_id,
       character_id,
     ]);
