@@ -147,3 +147,38 @@ const accountDuplicateCheck = async (player_id) => {
   }
   return true;
 };
+
+export const purchaseEquipment = async (req, res) => {
+  const { player_id, item_id, equip_slot, money } = req.body;
+  if (player_id == null || item_id == null || equip_slot == null || money) {
+    return res.status(400).json({ errorMessage: "필수 데이터가 누락되었습니다." });
+  }
+
+  const userMoneyConnection = await getShardByKey(player_id, "USER_DB", "money");
+  const userInventoryConnection = await getShardByKey(player_id, "USER_DB", "inventory");
+  try {
+    await userMoneyConnection.beginTransaction();
+    await userInventoryConnection.beginTransaction();
+
+    // const [inventory] = await userInventoryConnection.query(SQL_QUERIES.FIND_USER_INVENTORY_BY_PLAYER_ID, [player_id]);
+    let [rows] = await userInventoryConnection.query(SQL_QUERIES.UPDATE_INVENTORY, [item_id, equip_slot, player_id]);
+    if (rows.affectedRows === 0) {
+      return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
+    }
+
+    [rows] = await userMoneyConnection.query(SQL_QUERIES.UPDATE_MONEY, [money, player_id]);
+    if (rows.affectedRows === 0) {
+      return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
+    }
+
+    await userMoneyConnection.commit();
+    await userInventoryConnection.commit();
+
+    res.status(200).json({ player_id, item_id, equip_slot, money });
+  } catch (error) {
+    userMoneyConnection.rollback();
+    userInventoryConnection.rollback();
+    console.error(error);
+    res.status(500).json({ errorMessage: "purchaseEquipment 오류 발생" + error });
+  }
+};
