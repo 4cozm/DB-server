@@ -163,10 +163,9 @@ export const purchaseEquipment = async (req, res) => {
     await userMoneyConnection.beginTransaction();
     await userInventoryConnection.beginTransaction();
 
-    let [rows] = await userInventoryConnection.query(SQL_QUERIES.INSERT_ITEM_INVENTORY, [
+    let [rows] = await userInventoryConnection.query(SQL_QUERIES.CREATE_INVENTORY, [
       player_id,
       item_id,
-      item_sprite_name,
       equip_slot,
     ]);
     if (rows.affectedRows === 0) {
