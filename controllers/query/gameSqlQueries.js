@@ -6,7 +6,7 @@ const GAME_SQL_QUERIES = {
   CREATE_MATCH_HISTORY:
     "INSERT INTO match_history (game_session_id, player_id, `kill`, death, damage) VALUES(?, ?, ?, ?, ?)",
   CREATE_MATCH_LOG:
-    "INSERT INTO match_log (game_session_id, red_player1_id, red_player2_id, blue_player1_id , blue_player2_id, winner_team, start_time, end_time) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO match_log (game_session_id, green_player1_id, green_player2_id, blue_player1_id , blue_player2_id, winner_team, map_name, start_time, end_time) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
   FIND_POSSESSION_BY_PLAYER_ID: "SELECT * FROM possession WHERE player_id = ?",
   CREATE_POSSESSION: "INSERT INTO possession (player_id, character_id) VALUES(?, ?)",
   CREATE_USER_SCORE: "INSERT INTO score (player_id, score) VALUES(?, ?)",

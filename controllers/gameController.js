@@ -5,31 +5,6 @@ import { DbConnections } from '../db/connect.js';
 import GAME_SQL_QUERIES from './query/gameSqlQueries.js';
 import SQL_QUERIES from './query/userSqlQueries.js';
 
-//주의! 이미 유저의 테이블이 있다고 가정하고 사용하는 함수입니다 이후 담당자가 변경해주세요
-export const createMatchHistory = async (req, res) => {
-  try {
-    const { session_id, player_id, kill, death, damage } = req.body;
-
-    if (session_id == null || player_id == null || kill == null || death == null || damage == null) {
-      return res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
-    }
-
-    const connection = await getShardByKey(player_id, 'GAME_DB', 'match_history'); //이미 해당 테이블이 생성되어 있어야함
-    const log = await connection.query(GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, [
-      session_id,
-      player_id,
-      kill,
-      death,
-      damage,
-    ]);
-
-    res.status(200).json(log);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ errorMessage: 'createMatchHistory 오류 발생: ' + error });
-  }
-};
-
 export const dbSaveTransaction = async (req, res) => {
   const { win_team, lose_team, users, session_id, win_team_color, start_time, map_name } = req.body;
   if (
@@ -69,6 +44,24 @@ export const dbSaveTransaction = async (req, res) => {
 
     await saveErrorDataToFile(errorData, session_id);
     res.status(500).json({ errorMessage: 'dbSaveTransaction 에러 발생', error });
+  }
+};
+
+export const createMatchHistory = async (users, session_id) => {
+  for (const user of users) {
+    try {
+      const connection = await getShardByKey(user.playerId, 'GAME_DB', 'match_history');
+      await connection.query(GAME_SQL_QUERIES.CREATE_MATCH_HISTORY, [
+        session_id,
+        user.playerId,
+        user.kill,
+        user.death,
+        user.damage,
+      ]);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 };
 

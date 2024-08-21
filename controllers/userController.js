@@ -72,7 +72,7 @@ export const createUser = async (req, res) => {
     await saveShard(shardNumber, 'USER_DB', 'money', SQL_QUERIES.CREATE_USER_MONEY, player_id, [player_id, money]);
 
     //소유 캐릭터 생성
-    await saveShard(shardNumber, 'GAME_DB', 'possession', SQL_QUERIES.CREATE_POSSESSION, player_id, [
+    await saveShard(shardNumber, 'GAME_DB', 'possession', GAME_SQL_QUERIES.CREATE_POSSESSION, player_id, [
       player_id,
       character_id,
     ]);
@@ -157,24 +157,65 @@ export const findUserInventory = async (req, res) => {
       res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
-    const [rows] = await connection.query(SQL_QUERIES.FIND_USER_INVENTORY, [player_id]);
+    const [rows] = await connection.query(SQL_QUERIES.FIND_USER_INVENTORY_BY_PLAYER_ID, [player_id]);
     res.status(200).json(rows);
   } catch (error) {
     res.status(500).json({ errorMessage: '유저의 인벤토리를 찾는중 오류 발생 : ' + error });
   }
 };
 
-
-export const findEquippedItems = async (req,res)=>{
-  try{
-    const {player_id} = req.query;
+export const findEquippedItems = async (req, res) => {
+  try {
+    const { player_id } = req.query;
     if (player_id == null) {
       res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
-    const [rows] = await connection.query(SQL_QUERIES.FIND_EQUIPPED_ITEMS, [player_id]);
+    const [rows] = await connection.query(SQL_QUERIES.FIND_EQUIPPED_ITEMS_BY_PLAYER_ID, [player_id]);
     res.status(200).json(rows);
-  }catch (error) {
-    res.status(500).json({errorMessage : '유저가 장착한 아이템을 찾는중 오류 발생 :' + error});
+  } catch (error) {
+    res.status(500).json({ errorMessage: '유저가 장착한 아이템을 찾는중 오류 발생 :' + error });
+  }
+};
+
+export const findItemIdInInventory = async (req, res) => {
+  try {
+    const { player_id, item_id } = req.query;
+    if (player_id == null || item_id == null) {
+      res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
+    }
+    const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
+    const [rows] = await connection.query(SQL_QUERIES.FIND_ITEM_ID_IN_INVENTORY, [player_id, item_id]);
+    res.status(200).json(rows);
+  } catch (error) {
+    res.status(500).json({ errorMessage: '유저 인벤토리에 해당 아이템을 찾는 중 오류 발생 : ' + error });
+  }
+};
+
+export const equipItem = async (req, res) => {
+  try {
+    const { player_id, item_id } = req.body;
+    if (player_id == null || item_id == null) {
+      res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
+    }
+    const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
+    const [rows] = await connection.query(SQL_QUERIES.EQUIP_ITEM, [player_id, item_id]);
+    res.status(200).json(rows);
+  } catch (error) {
+    res.status(500).json({ errorMessage: '아이템을 장착하는 중 오류 발생 : ' + error });
+  }
+};
+
+export const unequipItem = async (req, res) => {
+  try {
+    const { player_id, item_id } = req.body;
+    if (player_id == null || item_id == null) {
+      res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
+    }
+    const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
+    const [rows] = await connection.query(SQL_QUERIES.UNEQUIP_ITEM, [player_id, item_id]);
+    res.status(200).json(rows);
+  } catch (error) {
+    res.status(500).json({ errorMessage: '아이템을 탈착하는 중 오류 발생 : ' + error });
   }
 };
