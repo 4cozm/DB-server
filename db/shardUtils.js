@@ -74,7 +74,15 @@ export const saveShard = async (shardNumber, database, table, query, key, value)
   } catch (error) {
     await dbConnection.rollback();
     if (error.code === 'ER_DUP_ENTRY') {
-      throw new Error('중복된 저장 입니다');
+      if (error.message.includes('account.name')) {
+        throw new CustomError('중복된 닉네임 입니다', ErrorCodes.ALREADY_EXIST_NAME);
+      } else if (error.message.includes('account.player_id')) {
+        console.error('중복된 ID 입니다');
+        throw new CustomError('중복된 ID 입니다.', ErrorCodes.ALREADY_EXIST_ID);
+      } else {
+        console.log(error);
+        throw new CustomError('알 수 없는 중복 메세지 발생', ErrorCodes.API_ERROR);
+      }
     } else {
       throw new Error(error);
     }
