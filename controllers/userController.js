@@ -42,7 +42,7 @@ export const createUser = async (req, res) => {
     }
     const check = await accountDuplicateCheck(player_id);
     if (!check) {
-      throw new CustomError('중복된 닉네임 입니다', ErrorCodes.ALREADY_EXIST_ID);
+      throw new CustomError('중복된 ID 입니다', ErrorCodes.ALREADY_EXIST_ID);
     }
 
     connections['GAME_DB'].beginTransaction();
@@ -76,6 +76,7 @@ export const createUser = async (req, res) => {
       player_id,
       character_id,
     ]);
+    throw new Error('테스트');
 
     connections['GAME_DB'].commit();
     connections['USER_DB'].commit();
