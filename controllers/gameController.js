@@ -3,6 +3,7 @@ import { getShardNumber } from '../db/shardUtils.js';
 import formatDate from '../utils/dateFormatter.js';
 import { DbConnections } from '../db/connect.js';
 import GAME_SQL_QUERIES from './query/gameSqlQueries.js';
+import SQL_QUERIES from './query/userSqlQueries.js';
 
 //주의! 이미 유저의 테이블이 있다고 가정하고 사용하는 함수입니다 이후 담당자가 변경해주세요
 export const createMatchHistory = async (req, res) => {
@@ -304,7 +305,7 @@ export const purchaseCharacter = async (req, res) => {
       return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
 
-    [rows] = await userConnection.query(GAME_SQL_QUERIES.UPDATE_MONEY, [money, player_id]);
+    [rows] = await userConnection.query(SQL_QUERIES.UPDATE_MONEY, [money, player_id]);
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
