@@ -8,6 +8,7 @@ import { CustomError } from '../error/customError.js';
 import SQL_QUERIES from './query/userSqlQueries.js';
 import GAME_SQL_QUERIES from './query/gameSqlQueries.js';
 import { DbConnections } from '../db/connect.js';
+import { setToMainDb } from '../db/main.js';
 
 export const findUserByPlayerId = async (req, res) => {
   try {
