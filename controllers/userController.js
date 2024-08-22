@@ -152,7 +152,7 @@ const accountDuplicateCheck = async (player_id) => {
 };
 
 export const purchaseEquipment = async (req, res) => {
-  const { player_id, item_id, item_sprite_name, equip_slot, money } = req.body;
+  const { player_id, item_id, equip_slot, money } = req.body;
   if (player_id == null || item_id == null || equip_slot == null || money) {
     return res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
   }
@@ -180,12 +180,12 @@ export const purchaseEquipment = async (req, res) => {
     await userMoneyConnection.commit();
     await userInventoryConnection.commit();
 
-    res.status(200).json({ player_id, character_id, money });
+    res.status(200).json({ player_id, item_id, equip_slot, money  });
   } catch (error) {
     userMoneyConnection.rollback();
     userInventoryConnection.rollback();
     console.error(error);
-    res.status(500).json({ errorMessage: 'purchaseCharacter 오류 발생' + error });
+    res.status(500).json({ errorMessage: 'purchaseEquipment 오류 발생' + error });
   }
 };
 export const findUserInventory = async (req, res) => {
