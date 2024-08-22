@@ -279,7 +279,7 @@ export const updatePossession = async (req, res) => {
 
 export const purchaseCharacter = async (req, res) => {
   const { player_id, character_id, money } = req.body;
-  if (player_id == null || character_id == null || money) {
+  if (player_id === null || character_id === null || money === null) {
     return res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
   }
 
