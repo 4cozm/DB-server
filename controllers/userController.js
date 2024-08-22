@@ -49,6 +49,12 @@ export const createUser = async (req, res) => {
     connections['USER_DB'].beginTransaction();
     mainConnections.beginTransaction();
 
+    await saveShard(shardNumber, 'USER_DB', 'account', SQL_QUERIES.CREATE_USER, player_id, [
+      player_id,
+      name,
+      pw,
+      guild,
+    ]);
     // main DB에 샤드 껍데기만 생성
     await setToMainDb(player_id, shardNumber, 'USER_DB', 'inventory');
     await setToMainDb(player_id, shardNumber, 'GAME_DB', 'match_history');
@@ -59,14 +65,6 @@ export const createUser = async (req, res) => {
       0,
     ]);
     await saveShard(shardNumber, 'GAME_DB', 'score', GAME_SQL_QUERIES.CREATE_USER_SCORE, player_id, [player_id, 0]);
-
-    // 계정 생성
-    await saveShard(shardNumber, 'USER_DB', 'account', SQL_QUERIES.CREATE_USER, player_id, [
-      player_id,
-      name,
-      pw,
-      guild,
-    ]);
 
     //Money 생성
     await saveShard(shardNumber, 'USER_DB', 'money', SQL_QUERIES.CREATE_USER_MONEY, player_id, [player_id, money]);

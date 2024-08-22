@@ -77,7 +77,7 @@ export const getToMainDb = async (key, database, table) => {
       return rows[0].shard_number;
     } else {
       throw new CustomError(
-        'getToMainDb 에러 - 해당 key로 저장된 shard 위치를 찾을 수 없습니다.',
+        `getToMainDb 에러 - 해당 key:${key}로 저장된 shard 위치를 찾을 수 없습니다.`,
         ErrorCodes.SHARD_NOT_FOUND,
       );
     }
