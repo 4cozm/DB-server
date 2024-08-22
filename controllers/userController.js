@@ -150,8 +150,12 @@ const accountDuplicateCheck = async (player_id) => {
 
 export const purchaseEquipment = async (req, res) => {
   const { player_id, item_id, equip_slot, money } = req.body;
-  if (player_id == null || item_id == null || equip_slot == null || money) {
-    return res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
+  if (player_id === null || item_id === null || equip_slot === null || money === null) {
+    return res
+      .status(400)
+      .json({
+        errorMessage: `누락된 데이터가 있습니다 player_id:${player_id},item_id:${item_id}, equip_slot:${equip_slot},money:${equip_slot}`,
+      });
   }
 
   const userMoneyConnection = await getShardByKey(player_id, 'USER_DB', 'money');
