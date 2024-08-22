@@ -76,7 +76,6 @@ export const createUser = async (req, res) => {
       player_id,
       character_id,
     ]);
-    throw new Error('테스트');
 
     connections['GAME_DB'].commit();
     connections['USER_DB'].commit();
@@ -163,11 +162,7 @@ export const purchaseEquipment = async (req, res) => {
     await userMoneyConnection.beginTransaction();
     await userInventoryConnection.beginTransaction();
 
-    let [rows] = await userInventoryConnection.query(SQL_QUERIES.CREATE_INVENTORY, [
-      player_id,
-      item_id,
-      equip_slot,
-    ]);
+    let [rows] = await userInventoryConnection.query(SQL_QUERIES.CREATE_INVENTORY, [player_id, item_id, equip_slot]);
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
@@ -180,7 +175,7 @@ export const purchaseEquipment = async (req, res) => {
     await userMoneyConnection.commit();
     await userInventoryConnection.commit();
 
-    res.status(200).json({ player_id, item_id, equip_slot, money  });
+    res.status(200).json({ player_id, item_id, equip_slot, money });
   } catch (error) {
     userMoneyConnection.rollback();
     userInventoryConnection.rollback();
