@@ -199,7 +199,7 @@ export const findEquippedItems = async (req, res) => {
   try {
     const { player_id } = req.query;
     if (player_id == null) {
-      res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
+      res.status(400).json({ errorMessage: 'player_id 데이터가 누락되었습니다.', player_id });
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.FIND_EQUIPPED_ITEMS_BY_PLAYER_ID, [player_id]);
@@ -213,7 +213,7 @@ export const findItemIdInInventory = async (req, res) => {
   try {
     const { player_id, item_id } = req.query;
     if (player_id == null || item_id == null) {
-      res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
+      res.status(400).json({ errorMessage: `누락된 데이터가 있습니다. player_id:${player_id},item_id:${item_id}` });
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.FIND_ITEM_ID_IN_INVENTORY, [player_id, item_id]);
@@ -227,7 +227,7 @@ export const equipItem = async (req, res) => {
   try {
     const { player_id, item_id } = req.body;
     if (player_id == null || item_id == null) {
-      res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
+      res.status(400).json({ errorMessage: `누락된 데이터가 있습니다. player_id:${player_id},item_id:${item_id}` });
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.EQUIP_ITEM, [player_id, item_id]);
@@ -241,7 +241,7 @@ export const unequipItem = async (req, res) => {
   try {
     const { player_id, item_id } = req.body;
     if (player_id == null || item_id == null) {
-      res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
+      res.status(400).json({ errorMessage: `누락된 데이터가 있습니다. player_id:${player_id},item_id:${item_id}` });
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.UNEQUIP_ITEM, [player_id, item_id]);
