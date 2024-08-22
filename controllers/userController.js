@@ -76,7 +76,6 @@ export const createUser = async (req, res) => {
       player_id,
       character_id,
     ]);
-    throw new Error('테스트');
 
     connections['GAME_DB'].commit();
     connections['USER_DB'].commit();
