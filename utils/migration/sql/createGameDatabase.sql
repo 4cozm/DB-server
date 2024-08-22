@@ -67,13 +67,13 @@ CREATE TABLE IF NOT EXISTS character_skills (
 INSERT INTO `character` (character_name, hp, speed, power, defense, critical, price) VALUES 
 ("근씨 아저씨", 150, 5.0, 10.0, 0.1, 0.05, 5000),
 ("원씨 아줌마", 100, 4.0, 12.0, 0.08, 0.1, 5000),
-("탱씨 아저씨", 200, 4.0, 8.0, 0.15, 0.05, 5000),
-("힐씨 아줌마", 80, 5.0, 7.0, 0.09, 0, 5000);
+("탱씨 아저씨", 180, 4.0, 8.0, 0.15, 0.05, 5000),
+("힐씨 아줌마", 80, 5.0, 10.0, 0.09, 0, 5000);
 
 -- 근씨 아저씨 스킬 데이터 삽입
 INSERT INTO character_skills (skill_name, skill_type, character_id, damage_factor, cool_time, duration, speed, range_x, range_y) VALUES
 ('괭이질', 1, 1, 1, 1, NULL, NULL, 1, 2),
-('광폭화', 4, 1, NULL, 30, 3, NULL, NULL, NULL);
+('광폭화', 4, 1, NULL, 15, 5, NULL, NULL, NULL);
 
 -- 원씨 아줌마 스킬 데이터 삽입
 INSERT INTO character_skills (skill_name, skill_type, character_id, damage_factor, cool_time, duration, speed, range_x, range_y) VALUES
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS item (
 );
 
 INSERT INTO item (item_name,item_equip_slot, item_hp, item_speed, item_attack, item_price) VALUES
-('칼', '손', NULL, NULL, 25, 5000),
-('망토','몸', 10, NULL, NULL, 5000),
-('삽','손', NULL, NULL, 15, 5000),
-('부츠','발', NULL, 3,NULL, 5000);
+('칼', '손', NULL, NULL, 5, 5000),
+('망토','몸', 20, NULL, NULL, 5000),
+('삽','손', 10, NULL, 2, 5000),
+('부츠','발', NULL, 0.5,NULL, 5000);
