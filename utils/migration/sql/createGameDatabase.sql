@@ -78,7 +78,7 @@ INSERT INTO character_skills (skill_name, skill_type, character_id, damage_facto
 -- 원씨 아줌마 스킬 데이터 삽입
 INSERT INTO character_skills (skill_name, skill_type, character_id, damage_factor, cool_time, duration, speed, range_x, range_y) VALUES
 ('씨 뿌리기', 2, 2, 1, 1, NULL, 10, 1.2, 1.2),
-('불장판', 5, 2, 2, 15, 3, NULL,  3, 3);
+('불장판', 8, 2, 2, 15, 3, NULL,  3, 3);
 
 -- 탱씨 아저씨 스킬 데이터 삽입
 INSERT INTO character_skills (skill_name, skill_type, character_id, damage_factor, cool_time, duration, speed, range_x, range_y) VALUES
