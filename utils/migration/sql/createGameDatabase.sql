@@ -72,7 +72,7 @@ INSERT INTO `character` (character_name, hp, speed, power, defense, critical, pr
 
 -- 근씨 아저씨 스킬 데이터 삽입
 INSERT INTO character_skills (skill_name, skill_type, character_id, damage_factor, cool_time, duration, speed, range_x, range_y) VALUES
-('괭이질', 1, 1, 1, 1, NULL, NULL, 1, 2),
+('괭이질', 1, 1, 1, 1, NULL, NULL, 2, 2),
 ('광폭화', 4, 1, NULL, 15, 5, NULL, NULL, NULL);
 
 -- 원씨 아줌마 스킬 데이터 삽입
@@ -82,7 +82,7 @@ INSERT INTO character_skills (skill_name, skill_type, character_id, damage_facto
 
 -- 탱씨 아저씨 스킬 데이터 삽입
 INSERT INTO character_skills (skill_name, skill_type, character_id, damage_factor, cool_time, duration, speed, range_x, range_y) VALUES
-('삽질', 1, 3, 1, 1, NULL, NULL, 1, 2),
+('삽질', 1, 3, 1, 1, NULL, NULL, 2, 2),
 ('기절기', 7, 3, NULL, 5, 1.5, NULL, 2, 2);
 
 -- 힐씨 아줌마 스킬 데이터 삽입
