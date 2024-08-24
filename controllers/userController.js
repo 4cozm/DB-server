@@ -21,7 +21,7 @@ export const findUserByPlayerId = async (req, res) => {
 
     const [rows] = await shard.query(SQL_QUERIES.FIND_USER_BY_PLAYER_ID, [player_id]);
     if (rows.length === 0) {
-      fatalError('', 'main DB에는 유저가 존재하지만 샤드에 해당 유저의 정보가 존재하지 않습니다');
+      fatalError(req, 'main DB에는 유저가 존재하지만 샤드에 해당 유저의 정보가 존재하지 않습니다');
     }
     res.status(200).json(rows);
   } catch (error) {
@@ -151,11 +151,9 @@ const accountDuplicateCheck = async (player_id) => {
 export const purchaseEquipment = async (req, res) => {
   const { player_id, item_id, equip_slot, money } = req.body;
   if (player_id === null || item_id === null || equip_slot === null || money === null) {
-    return res
-      .status(400)
-      .json({
-        errorMessage: `누락된 데이터가 있습니다 player_id:${player_id},item_id:${item_id}, equip_slot:${equip_slot},money:${equip_slot}`,
-      });
+    return res.status(400).json({
+      errorMessage: `누락된 데이터가 있습니다 player_id:${player_id},item_id:${item_id}, equip_slot:${equip_slot},money:${equip_slot}`,
+    });
   }
 
   const userMoneyConnection = await getShardByKey(player_id, 'USER_DB', 'money');
