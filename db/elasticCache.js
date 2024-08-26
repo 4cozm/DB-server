@@ -58,9 +58,11 @@ export const setHashCache = async (database, table, key, values) => {
   try {
     if (Array.isArray(values) && values.length > 0) {
       const fields = {};
-      for (const [field, val] of Object.entries(values)) {
-        fields[field] = typeof val === 'object' ? JSON.stringify(val) : String(val);
-      }
+      values.forEach((obj, index) => {
+        for (const [field, value] of Object.entries(obj)) {
+          fields[`${index}:${field}`] = typeof value === 'object' ? JSON.stringify(value) : String(value);
+        }
+      });
       console.log('setHashCache에 저장된 값:', fields);
       await redisClient.hSet(redisKey, fields);
       console.log(redisKey, '로 저장 성공');
@@ -69,7 +71,6 @@ export const setHashCache = async (database, table, key, values) => {
     console.error('setHashCache에서 오류 발생', error);
   }
 };
-
 /**
  * 해시 형태로 값을 조회할 때
  * @param {*} database
@@ -80,12 +81,22 @@ export const setHashCache = async (database, table, key, values) => {
 export const getHashCache = async (database, table, key) => {
   const redisKey = `${database}:${table}:${key}`;
   try {
-    const value = await redisClient.hGetAll(redisKey);
-    if (Object.keys(value).length > 0) {
-      console.log('Elastic cache적중', redisKey); //테스트 로그
-      return value;
+    const fields = await redisClient.hGetAll(redisKey);
+    if (Object.keys(fields).length > 0) {
+      const parsedValue = {};
+      for (const [field, value] of Object.entries(fields)) {
+        const [index, fieldName] = field.split(':');
+        if (!parsedValue[index]) {
+          parsedValue[index] = {};
+        }
+        try {
+          parsedValue[index][fieldName] = JSON.parse(value);
+        } catch {
+          parsedValue[index][fieldName] = value;
+        }
+      }
+      return Object.values(parsedValue);
     } else {
-      console.log(redisKey, 'Elastic cache에서 값 찾지 못함'); //테스트 로그
       return null;
     }
   } catch (error) {
