@@ -201,6 +201,10 @@ export const findUserInventory = async (req, res) => {
     if (player_id == null) {
       res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
     }
+    const cache = await getHashCache('USER_DB', 'inventory', player_id);
+    if (cache !== null) {
+      return res.status(200).json(cache);
+    }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.FIND_USER_INVENTORY_BY_PLAYER_ID, [player_id]);
     setHashCache('USER_DB', 'inventory', player_id, rows);
