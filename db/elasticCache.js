@@ -57,12 +57,11 @@ export const setHashCache = async (database, table, key, values) => {
   const redisKey = `${database}:${table}:${key}`;
   try {
     if (Array.isArray(values) && values.length > 0) {
-      const value = values[0];
       const fields = {};
-      for (const [field, val] of Object.entries(value)) {
+      for (const [field, val] of Object.entries(values)) {
         fields[field] = typeof val === 'object' ? JSON.stringify(val) : String(val);
       }
-      console.log('setHashCache에 출력된 값:', fields);
+      console.log('setHashCache에 저장된 값:', fields);
       await redisClient.hSet(redisKey, fields);
       console.log(redisKey, '로 저장 성공');
     }
