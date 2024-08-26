@@ -58,20 +58,27 @@ export const setHashCache = async (database, table, key, values) => {
   const redisKey = `${database}:${table}:${key}`;
   console.log(redisKey);
   try {
-    await redisClient.hSet(redisKey, JSON.stringify(values));
+    await redisClient.hSet(redisKey, values);
   } catch (error) {
     console.error('setHashCache에서 오류 발생', error);
   }
 };
 
+/**
+ * 해시 형태로 값을 조회할 때
+ * @param {*} database
+ * @param {*} table
+ * @param {*} key
+ * @returns
+ */
 export const getHashCache = async (database, table, key) => {
   const redisKey = `${database}:${table}:${key}`;
   console.log(redisKey);
   try {
-    const value = await redisClient.hGet(redisKey);
-    if (value) {
+    const value = await redisClient.hGetAll(redisKey);
+    if (Object.keys(value).length > 0) {
       console.log('Elastic cache적중', redisKey); //테스트 로그
-      return JSON.parse(value);
+      return value;
     } else {
       console.log('Elastic cache에서 값 찾지 못함'); //테스트 로그
       return null;
