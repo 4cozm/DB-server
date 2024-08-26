@@ -12,7 +12,8 @@ const SQL_QUERIES = {
   CREATE_INVENTORY: 'INSERT INTO inventory (player_id, item_id, equip_slot) VALUES (?, ?, ?)',
   EQUIP_ITEM: 'UPDATE inventory SET equipped_items = TRUE WHERE player_id = ? AND item_id = ?',
   UNEQUIP_ITEM: 'UPDATE inventory SET equipped_items = FALSE WHERE player_id = ? AND item_id = ?',
-  FIND_ITEM_ID_IN_INVENTORY: 'SELECT * FROM inventory where player_id = ? AND item_id=?'
+  FIND_ITEM_ID_IN_INVENTORY: 'SELECT * FROM inventory where player_id = ? AND item_id=?',
+  COUNT_OF_USERS: "SELECT COUNT(1) FROM Shards WHERE `database` = 'USER_DB' AND `table` = 'account'"
 };
 
 export default SQL_QUERIES;

@@ -16,8 +16,12 @@ const GAME_SQL_QUERIES = {
   FIND_USER_SCORE_BY_PLAYER_ID: 'SELECT * FROM score WHERE player_id = ?',
   FIND_USER_RATING_BY_PLAYER_ID: 'SELECT * FROM rating WHERE player_id = ?',
   FIND_CHARACTERS_DATA: 'SELECT * FROM `character`',
+  FIND_CHARACTERS_SKILL_DATA: 'SELECT * FROM `character_skills`',
+  FIND_ALL_ITEMS: 'SELECT * FROM `item`',
+  FIND_ITEM_STATS: 'SELECT * FROM item WHERE item_id = ?',
   FIND_CHARACTERS_INFO: 'SELECT * FROM `character` WHERE character_id=? ',
   UPDATE_POSSESSION: 'UPDATE possession SET character_id = ? WHERE player_id = ?',
+  ads:"SELECT COUNT(1) FROM Shards WHERE `database` = 'USER_DB' AND `table` = 'account'"
 };
 
 export default GAME_SQL_QUERIES;

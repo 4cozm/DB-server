@@ -347,3 +347,40 @@ export const findCharacterInfo = async (req, res) => {
     res.status(500).json({ errorMessage: 'findCharacterInfo 오류 발생' + error });
   }
 };
+
+export const findCharacterSkillData = async (req, res) => {
+  //모든 샤드의 GAME_DB에는 캐릭터 정보가 중복 포함되어 있음. redis 같은곳으로 캐릭터 조회를 옮겨야 함. 일단 어거지로 구현만 해둘 예정
+  try {
+    const connections = DbConnections();
+    const [rows] = await connections[0]['GAME_DB'].query(GAME_SQL_QUERIES.FIND_CHARACTERS_SKILL_DATA);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMessage: 'findCharacterData 오류 발생' + error });
+  }
+};
+
+export const findAllItems = async (req, res) => {
+  //모든 샤드의 GAME_DB에는 캐릭터 정보가 중복 포함되어 있음. redis 같은곳으로 캐릭터 조회를 옮겨야 함. 일단 어거지로 구현만 해둘 예정
+  try {
+    const connections = DbConnections();
+    const [rows] = await connections[0]['GAME_DB'].query(GAME_SQL_QUERIES.FIND_ALL_ITEMS);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMessage: 'findCharacterData 오류 발생' + error });
+  }
+};
+
+export const findItemStats = async (req, res) => {
+  //모든 샤드의 GAME_DB에는 캐릭터 정보가 중복 포함되어 있음. redis 같은곳으로 캐릭터 조회를 옮겨야 함. 일단 어거지로 구현만 해둘 예정
+  try {
+    const { item_id } = req.query;
+    const connections = DbConnections();
+    const [rows] = await connections[0]['GAME_DB'].query(GAME_SQL_QUERIES.FIND_ITEM_STATS, [item_id]);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMessage: 'findCharacterData 오류 발생' + error });
+  }
+};

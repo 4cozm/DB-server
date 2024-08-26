@@ -1,4 +1,4 @@
-import * as env from "../constants/env.js";
+import * as env from '../constants/env.js';
 
 export const config = {
   HOST: env.HOST,
@@ -32,6 +32,9 @@ export const config = {
     host: env.MAIN_HOST,
     port: env.MAIN_PORT,
     database: env.MAIN_NAME,
+  },
+  ELASTIC_CACHE: {
+    elastic: env.ELASTIC_CACHE,
   },
   DISCORD: {
     WEB_HOOK: env.DISCORD_WEB_HOOK,
