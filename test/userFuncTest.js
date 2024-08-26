@@ -1,4 +1,4 @@
-import SQL_QUERIES from '../controllers/query/userSqlQueries.js';
+import assert from 'assert';
 import {
   createUser,
   findUserByPlayerId,
@@ -8,17 +8,14 @@ import {
 } from '../controllers/userController.js';
 import { sendErrorToDiscord } from '../utils/webHook.js';
 
-/**
- * 테스트 항목
- * - findUserByPlayerId
- * - createUser
- * - createUserMoney
- * - updateUserLogin
- * - findMoneyByPlayerId
- * - updateMoney
- */
+// Mock된 응답 객체 생성
+const createMockResponse = () => {
+  const res = {};
+  res.status = () => res;
+  res.json = () => res;
+  return res;
+};
 
-//* createUser *//
 export const createUserFuncTest = async (connection) => {
   const req = {
     body: {
@@ -31,307 +28,179 @@ export const createUserFuncTest = async (connection) => {
     },
   };
 
-//Test response
-  const res = {
-    statusCode: 200, 
-    body: null,
-    status(code) {
-      this.statusCode = code;
-      return this; 
-    },
-    json(data) {
-      this.body = data; 
-      return this; 
-    },
-  };
+  const res = createMockResponse();
 
   try {
-    await connection.beginTransaction(); 
+    await connection.beginTransaction();
     await createUser(req, res);
 
-    console.log('Response Status:', res.statusCode);
-    console.log('Response Body:', res.body);
-
-    if (res.statusCode !== 201 || !res.body || !res.body.player_id) {
-        throw new Error('유저 생성 실패');
-    }
+    assert.strictEqual(res.status.callCount, 1);
+    assert.strictEqual(res.status.firstCall.args[0], 201);
+    assert.deepStrictEqual(res.json.firstCall.args[0], {
+      player_id: 'TCU1',
+    });
 
     await connection.rollback();
   } catch (error) {
     console.error('createUser 오류 발생: ', error);
-
     await sendErrorToDiscord('CI/CD 테스트 중 createUser 중 오류 발생', error);
-
     await connection.rollback();
-  } 
+  }
 };
 
 //* findUserByPlayerId *//
-export const findUserFuncTest = async (connection) =>{
+export const findUserFuncTest = async (connection) => {
+  const req = {
+    query: { player_id: 'testId' },
+  };
 
-    let player_id = 'TCU1'; 
-    let req = {
-        query: { player_id },
-    };
+  const res = createMockResponse();
 
-    let res = {
-        statusCode: 200,
-        body: null,
-        status(code) {
-            this.statusCode = code;
-            return this;
-        },
-        json(data) {
-            this.body = data;
-            return this;
-        },
-    };
+  try {
+    await connection.beginTransaction();
+    await findUserByPlayerId(req, res);
 
-    try {
-        await connection.beginTransaction();
-        await findUserByPlayerId(req, res);
+    assert.strictEqual(res.status.callCount, 1);
+    assert.strictEqual(res.status.firstCall.args[0], 200);
+    assert.ok(res.json.firstCall.args[0]);
 
-        console.log('Response Status:', res.statusCode);
-        console.log('Response Body:', res.body);
-
-        if (res.statusCode !== 200 || !res.body || res.body.length === 0) {
-            throw new Error('유저 조회 실패 또는 데이터를 찾을 수 없습니다.');
-        }
-
-        await connection.rollback();
-    } catch (error) {
-        console.error('findUserByPlayerId 오류 발생: ', error);
-
-        await sendErrorToDiscord('CI/CD 테스트 중 findUserByPlayerId 중 오류 발생', error);
-
-        await connection.rollback();
-    } 
+    await connection.rollback();
+  } catch (error) {
+    console.error('findUserByPlayerId 오류 발생: ', error);
+    await sendErrorToDiscord('CI/CD 테스트 중 findUserByPlayerId 중 오류 발생', error);
+    await connection.rollback();
+  }
 };
 
 //* updateUserLogin *//
 export const updateUserLoginFuncTest = async (connection) => {
-    
-    //Test 1 : Correct player_id
-    const reqSuccess = {
-        body: {
-            player_id: 'TCU1', 
-        },
-    };
+  const reqSuccess = { body: { player_id: 'testId' } };
+  const reqMissing = { body: {} };
+  const reqNotFound = { body: { player_id: 'NonExistingPlayer' } };
 
-    //Test 2: Missing player_id
-    const reqMissing = {
-        body: {
-            
-        },
-    };
+  const res = createMockResponse();
 
-    //Test 3: Non-existing player_id
-    const reqNotFound = {
-        body: {
-            player_id: 'NonExistingPlayer', 
-        },
-    };
+  try {
+    await connection.beginTransaction();
 
-    const res = {
-        statusCode: 200,
-        body: null,
-        status(code) {
-            this.statusCode = code;
-            return this;
-        },
-        json(data) {
-            this.body = data;
-            return this;
-        },
-    };
+    // Test Case 1: Successful login update
+    await updateUserLogin(reqSuccess, res);
+    assert.strictEqual(res.status.callCount, 1);
+    assert.strictEqual(res.status.firstCall.args[0], 200);
+    assert.deepStrictEqual(res.json.firstCall.args[0], {
+      message: '마지막 로그인 시간 업데이트 성공',
+    });
 
-    try {
-        await connection.beginTransaction();
+    // Test Case 2: Missing player_id
+    await updateUserLogin(reqMissing, res);
+    assert.strictEqual(res.status.callCount, 2);
+    assert.strictEqual(res.status.secondCall.args[0], 400);
+    assert.deepStrictEqual(res.json.secondCall.args[0], {
+      errorMessage: 'player_id가 누락되었습니다',
+    });
 
-        // Test Case 1: Successful login update
-        await updateUserLogin(reqSuccess, res);
-        console.log('Success Case - Response Status:', res.statusCode);
-        console.log('Success Case - Response Body:', res.body);
+    // Test Case 3: User not found
+    await updateUserLogin(reqNotFound, res);
+    assert.strictEqual(res.status.callCount, 3);
+    assert.strictEqual(res.status.thirdCall.args[0], 404);
+    assert.deepStrictEqual(res.json.thirdCall.args[0], {
+      errorMessage: '존재하지 않는 유저입니다',
+    });
 
-        if (res.statusCode !== 200 || !res.body || res.body.message !== '마지막 로그인 시간 업데이트 성공') {
-            throw new Error('로그인 시간 업데이트 실패');
-        }
-
-        // Test Case 2: Missing player_id
-        await updateUserLogin(reqMissing, res);
-        console.log('Missing player_id Case - Response Status:', res.statusCode);
-        console.log('Missing player_id Case - Response Body:', res.body);
-
-        if (res.statusCode !== 400 || !res.body || !res.body.errorMessage) {
-            throw new Error('player_id가 누락되었습니다');
-        }
-
-        // Test Case 3: User not found
-        await updateUserLogin(reqNotFound, res);
-        console.log('User Not Found Case - Response Status:', res.statusCode);
-        console.log('User Not Found Case - Response Body:', res.body);
-
-        if (res.statusCode !== 404 || !res.body || !res.body.errorMessage) {
-            throw new Error('존재하지 않는 유저입니다 ');
-        }
-
-        await connection.rollback();
-    } catch (error) {
-        console.error('updateUserLogin 오류 발생:', error);
-        await sendErrorToDiscord('CI/CD 테스트 updateUserLogin 중 오류 발생', error);
-        await connection.rollback();
-    } 
+    await connection.rollback();
+  } catch (error) {
+    console.error('updateUserLogin 오류 발생:', error);
+    await sendErrorToDiscord('CI/CD 테스트 updateUserLogin 중 오류 발생', error);
+    await connection.rollback();
+  }
 };
 
 //* findMoneyByPlayerId *//
 export const findMoneyFuncTest = async (connection) => {
-    
-    //Test 1 : Correct player_id
-    const reqSuccess = {
-        query: {
-            player_id: 'TCU1', 
-        },
-    };
+  const reqSuccess = {
+    query: { player_id: 'testId' },
+  };
+  const reqMissing = {
+    query: {},
+  };
+  const reqNotFound = {
+    query: { player_id: 'NonExistentPlayer' },
+  };
 
-    //Test 2: Missing player_id
-    const reqMissing = {
-        query: {
+  const res = createMockResponse();
 
-        },
-    };
-    
-    //Test 3: Non-existing player_id
-    const reqNotFound = {
-        query: {
-            player_id: 'NonExistentPlayer', 
-        },
-    };
+  try {
+    await connection.beginTransaction();
 
-    const res = {
-        statusCode: 200,
-        body: null,
-        status(code) {
-            this.statusCode = code;
-            return this;
-        },
-        json(data) {
-            this.body = data;
-            return this;
-        },
-    };
+    // Test Case 1: Successful in finding user money
+    await findMoneyByPlayerId(reqSuccess, res);
+    assert.strictEqual(res.status.callCount, 1);
+    assert.strictEqual(res.status.firstCall.args[0], 201);
+    assert.deepStrictEqual(res.json.firstCall.args[0], {
+      amount: 1000, // 예상 금액을 지정하세요.
+    });
 
-    try {
-        await connection.beginTransaction();
+    // Test Case 2: Missing player_id
+    await findMoneyByPlayerId(reqMissing, res);
+    assert.strictEqual(res.status.callCount, 2);
+    assert.strictEqual(res.status.secondCall.args[0], 400);
+    assert.deepStrictEqual(res.json.secondCall.args[0], {
+      errorMessage: 'player_id가 누락되었습니다.',
+    });
 
-        // Test Case 1: Successful in finding user money
-        await findMoneyByPlayerId(reqSuccess, res);
-        console.log('Success Case - Response Status:', res.statusCode);
-        console.log('Success Case - Response Body:', res.body);
+    // Test Case 3: User not found
+    await findMoneyByPlayerId(reqNotFound, res);
+    assert.strictEqual(res.status.callCount, 3);
+    assert.strictEqual(res.status.thirdCall.args[0], 201);
+    assert.deepStrictEqual(res.json.thirdCall.args[0], null);
 
-        if (res.statusCode !== 201 || !res.body || typeof res.body.amount !== 'number') {
-            throw new Error('유저의 money 조회 실패');
-        }
-
-        // Test Case 2 : Missing player_id
-        await findMoneyByPlayerId(reqMissing, res);
-        console.log('Missing player_id Case - Response Status:', res.statusCode);
-        console.log('Missing player_id Case - Response Body:', res.body);
-
-        if (res.statusCode !== 400 || !res.body || !res.body.errorMessage) {
-            throw new Error('player_id가 누락되었습니다.');
-        }
-
-        //Test Case 3: User not found
-        await findMoneyByPlayerId(reqNotFound, res);
-        console.log('User Not Found Case - Response Status:', res.statusCode);
-        console.log('User Not Found Case - Response Body:', res.body);
-
-        if (res.statusCode !== 201 || res.body !== null) {
-            throw new Error('존재하지 않는 유저입니다.');
-        }
-
-        await connection.rollback();
-    } catch (error) {
-        console.error('findMoneyByPlayerId 오류 발생:', error);
-        await sendErrorToDiscord('CI/CD 테스트 findMoneyByPlayerId 중 오류 발생', error);
-        await connection.rollback();
-    } 
+    await connection.rollback();
+  } catch (error) {
+    console.error('findMoneyByPlayerId 오류 발생:', error);
+    await sendErrorToDiscord('CI/CD 테스트 findMoneyByPlayerId 중 오류 발생', error);
+    await connection.rollback();
+  }
 };
 
 //* updateMoney *//
 export const updateMoneyFuncTest = async (connection) => {
-    
-    // Test 1: Correct player_id 
-    const reqSuccess = {
-        body: {
-            player_id: 'TCU1', 
-            money: 1000, 
-        },
-    };
+  const reqSuccess = { body: { player_id: 'testId', money: 1000 } };
+  const reqMissing = { body: { money: 1000 } };
+  const reqNotFound = { body: { player_id: 'NonExistentPlayer', money: 1000 } };
 
-    //Test 2: Missing player_id
-    const reqMissing = {
-        body: {
+  const res = createMockResponse();
 
-            money: 1000,
-        },
-    };
+  try {
+    await connection.beginTransaction();
 
-    // Test 3: Non-existing player_id
-    const reqNotFound = {
-        body: {
-            player_id: 'NonExistentPlayer', 
-            money: 1000,
-        },
-    };
+    // Test Case 1: Successful money update
+    await updateMoney(reqSuccess, res);
+    assert.strictEqual(res.status.callCount, 1);
+    assert.strictEqual(res.status.firstCall.args[0], 200);
+    assert.deepStrictEqual(res.json.firstCall.args[0], {
+      affectedRows: 1, // 예상 affectedRows 값을 지정하세요.
+    });
 
-    const res = {
-        statusCode: 200,
-        body: null,
-        status(code) {
-            this.statusCode = code;
-            return this;
-        },
-        json(data) {
-            this.body = data;
-            return this;
-        },
-    };
+    // Test Case 2: Missing player_id
+    await updateMoney(reqMissing, res);
+    assert.strictEqual(res.status.callCount, 2);
+    assert.strictEqual(res.status.secondCall.args[0], 400);
+    assert.deepStrictEqual(res.json.secondCall.args[0], {
+      errorMessage: 'player_id가 누락되었습니다.',
+    });
 
-    try {
-        await connection.beginTransaction();
+    // Test Case 3: User not found
+    await updateMoney(reqNotFound, res);
+    assert.strictEqual(res.status.callCount, 3);
+    assert.strictEqual(res.status.thirdCall.args[0], 200);
+    assert.deepStrictEqual(res.json.thirdCall.args[0], {
+      affectedRows: 0,
+    });
 
-        // Test Case 1: Successful money update
-        await updateMoney(reqSuccess, res);
-        console.log('Success Case - Response Status:', res.statusCode);
-        console.log('Success Case - Response Body:', res.body);
-
-        if (res.statusCode !== 200 || !res.body || res.body.affectedRows === 0) {
-            throw new Error('유저의 돈 업데이트 실패');
-        }
-
-        // Test Case 2: Missing player_id
-        await updateMoney(reqMissing, res);
-        console.log('Missing player_id Case - Response Status:', res.statusCode);
-        console.log('Missing player_id Case - Response Body:', res.body);
-
-        if (res.statusCode !== 400 || !res.body || !res.body.errorMessage) {
-            throw new Error('player_id가 누락되었습니다.');
-        }
-
-        // Test Case 3: User not found
-        await updateMoney(reqNotFound, res);
-        console.log('User Not Found Case - Response Status:', res.statusCode);
-        console.log('User Not Found Case - Response Body:', res.body);
-
-        if (res.statusCode !== 200 || !res.body || res.body.affectedRows === 0) {
-            throw new Error('존재하지 않는 유저입니다.');
-        }
-
-        await connection.rollback();
-    } catch (error) {
-        console.error('updateMoney 오류 발생:', error);
-        await sendErrorToDiscord('CI/CD 테스트 updateMoney 중 오류 발생', error);
-        await connection.rollback();
-    } 
+    await connection.rollback();
+  } catch (error) {
+    console.error('updateMoney 오류 발생:', error);
+    await sendErrorToDiscord('CI/CD 테스트 updateMoney 중 오류 발생', error);
+    await connection.rollback();
+  }
 };

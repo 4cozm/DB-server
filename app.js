@@ -8,6 +8,7 @@ import { verifySignature } from './utils/verifySignature.js';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import redisClient from "./db/elasticCache.js"
+import startTest from './test/testManager.js';
 
 
 dotenv.config();
@@ -31,6 +32,7 @@ app.use('/api/webhook', bodyParser.json({ verify: verifySignature }), webHookRou
 app.listen(process.env.PORT, process.env.HOST, async () => {
   await makeDbConnect();
   await connectMainDb();
-  await redisClient.connect();
+  // await redisClient.connect();
+  await startTest();
   console.log(`서버가 ${process.env.HOST}:${process.env.PORT}에서 시작됨`);
 });

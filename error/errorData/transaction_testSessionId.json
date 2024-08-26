@@ -1,0 +1,50 @@
+{
+  "win_team": [
+    {
+      "playerId": "testId",
+      "kill": 2,
+      "death": 0,
+      "damage": 132
+    },
+    {
+      "playerId": "testId",
+      "kill": 0,
+      "death": 1,
+      "damage": 118
+    }
+  ],
+  "lose_team": [
+    {
+      "playerId": "testId",
+      "kill": 0,
+      "death": 1,
+      "damage": 82
+    },
+    {
+      "playerId": "testId",
+      "kill": 1,
+      "death": 1,
+      "damage": 68
+    }
+  ],
+  "users": [
+    {
+      "playerId": "testId",
+      "kill": 2,
+      "death": 0,
+      "damage": 132
+    },
+    {
+      "playerId": "testId",
+      "kill": 0,
+      "death": 1,
+      "damage": 118
+    }
+  ],
+  "session_id": "testSessionId",
+  "win_team_color": "green",
+  "start_time": 1724685442291,
+  "map_name": "비내리는 호남선",
+  "error": "Error: Error: 중복 저장을 하고 있습니다! - 저장을 시도한 샤드: 1 번, key: testSessionId, database: GAME_DB, table: match_log은 이미 0 번 샤드에 존재합니다",
+  "timestamp": "2024-08-26T15:17:22.758Z"
+}

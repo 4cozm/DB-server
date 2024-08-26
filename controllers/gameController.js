@@ -4,7 +4,7 @@ import formatDate from '../utils/dateFormatter.js';
 import { DbConnections } from '../db/connect.js';
 import GAME_SQL_QUERIES from './query/gameSqlQueries.js';
 import SQL_QUERIES from './query/userSqlQueries.js';
-
+import saveErrorDataToFile from '../utils/errorCollector.js';
 export const dbSaveTransaction = async (req, res) => {
   const { win_team, lose_team, users, session_id, win_team_color, start_time, map_name } = req.body;
   if (
