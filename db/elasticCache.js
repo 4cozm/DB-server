@@ -63,6 +63,7 @@ export const setHashCache = async (database, table, key, values) => {
       }
       console.log('setHashCache에 출력된 값:', fields);
       await redisClient.hSet(redisKey, fields);
+      console.log(redisKey,"로 저장 성공");
     }
   } catch (error) {
     console.error('setHashCache에서 오류 발생', error);

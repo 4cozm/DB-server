@@ -120,7 +120,7 @@ export const findMoneyByPlayerId = async (req, res) => {
     if (!player_id) {
       res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
     }
-    const cache = await getCache('USER_DB', 'money', player_id, money);
+    const cache = await getCache('USER_DB', 'money', player_id);
     if (cache !== null) {
       return res.status(200).json(JSON.parse(cache));
     }
