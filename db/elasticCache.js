@@ -92,7 +92,7 @@ export const getHashCache = async (database, table, key) => {
         try {
           parsedValue[index][fieldName] = JSON.parse(value);
         } catch {
-          parsedValue[index][fieldName] = value; 
+          parsedValue[index][fieldName] = value;
         }
       }
       return Object.values(parsedValue);
@@ -101,6 +101,16 @@ export const getHashCache = async (database, table, key) => {
     }
   } catch (error) {
     console.error('getHashCache에서 오류 발생', error);
+  }
+};
+
+export const deleteHashCache = async (database, table, key) => {
+  const redisKey = `${database}:${table}:${key}`;
+  try {
+    await redisClient.del(redisKey);
+    console.log(redisKey, '삭제 성공');
+  } catch (error) {
+    console.error('deleteHashCache에서 오류 발생', error);
   }
 };
 

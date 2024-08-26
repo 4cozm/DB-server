@@ -8,7 +8,7 @@ import { CustomError } from '../error/customError.js';
 import SQL_QUERIES from './query/userSqlQueries.js';
 import GAME_SQL_QUERIES from './query/gameSqlQueries.js';
 import { setToMainDb } from '../db/main.js';
-import { getCache, getHashCache, setCache, setHashCache } from '../db/elasticCache.js';
+import { deleteHashCache, getCache, getHashCache, setCache, setHashCache } from '../db/elasticCache.js';
 
 export const findUserByPlayerId = async (req, res) => {
   try {
@@ -186,7 +186,7 @@ export const purchaseEquipment = async (req, res) => {
 
     await userMoneyConnection.commit();
     await userInventoryConnection.commit();
-
+    await deleteHashCache('USER_DB', 'inventory', player_id);
     res.status(200).json({ player_id, item_id, equip_slot, money });
   } catch (error) {
     userMoneyConnection.rollback();
@@ -207,7 +207,7 @@ export const findUserInventory = async (req, res) => {
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.FIND_USER_INVENTORY_BY_PLAYER_ID, [player_id]);
-    setHashCache('USER_DB', 'inventory', player_id, rows);
+    await setHashCache('USER_DB', 'inventory', player_id, rows);
     res.status(200).json(rows);
   } catch (error) {
     res.status(500).json({ errorMessage: '유저의 인벤토리를 찾는중 오류 발생 : ' + error });
@@ -220,13 +220,8 @@ export const findEquippedItems = async (req, res) => {
     if (player_id == null) {
       res.status(400).json({ errorMessage: 'player_id 데이터가 누락되었습니다.', player_id });
     }
-    const cache = await getHashCache('USER_DB', 'inventory', player_id);
-    if (cache !== null) {
-      return res.status(200).json(cache);
-    }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.FIND_EQUIPPED_ITEMS_BY_PLAYER_ID, [player_id]);
-    await setHashCache('USER_DB', 'inventory', player_id, rows);
     res.status(200).json(rows);
   } catch (error) {
     res.status(500).json({ errorMessage: '유저가 장착한 아이템을 찾는중 오류 발생 :' + error });
@@ -256,6 +251,7 @@ export const equipItem = async (req, res) => {
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.EQUIP_ITEM, [player_id, item_id]);
     res.status(200).json(rows);
+    await deleteHashCache('USER_DB', 'inventory', player_id);
   } catch (error) {
     res.status(500).json({ errorMessage: '아이템을 장착하는 중 오류 발생 : ' + error });
   }
@@ -270,6 +266,7 @@ export const unequipItem = async (req, res) => {
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.UNEQUIP_ITEM, [player_id, item_id]);
     res.status(200).json(rows);
+    await deleteHashCache('USER_DB', 'inventory', player_id);
   } catch (error) {
     res.status(500).json({ errorMessage: '아이템을 탈착하는 중 오류 발생 : ' + error });
   }
