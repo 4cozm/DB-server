@@ -42,10 +42,8 @@ export const getCache = async (database, table, key) => {
   try {
     const value = await redisClient.get(redisKey);
     if (value) {
-      console.log('Elastic cache적중', value); //테스트 로그
       return JSON.parse(value);
     } else {
-      console.log(redisKey, 'Elastic cache에서 값 찾지 못함'); //테스트 로그
       return null;
     }
   } catch (error) {
@@ -63,9 +61,7 @@ export const setHashCache = async (database, table, key, values) => {
           fields[`${index}:${field}`] = typeof value === 'object' ? JSON.stringify(value) : String(value);
         }
       });
-      console.log('setHashCache에 저장된 값:', fields);
       await redisClient.hSet(redisKey, fields);
-      console.log(redisKey, '로 저장 성공');
     }
   } catch (error) {
     console.error('setHashCache에서 오류 발생', error);
@@ -95,7 +91,6 @@ export const getHashCache = async (database, table, key) => {
           parsedValue[index][fieldName] = value;
         }
       }
-      console.log('Elastic cache적중', parsedValue); //테스트 로그
       return Object.values(parsedValue);
     } else {
       return null;
@@ -109,7 +104,6 @@ export const deleteHashCache = async (database, table, key) => {
   const redisKey = `${database}:${table}:${key}`;
   try {
     await redisClient.del(redisKey);
-    console.log(redisKey, '삭제 성공');
   } catch (error) {
     console.error('deleteHashCache에서 오류 발생', error);
   }

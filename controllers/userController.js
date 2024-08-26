@@ -28,7 +28,6 @@ export const findUserByPlayerId = async (req, res) => {
     if (rows.length === 0) {
       fatalError(req, 'main DB에는 유저가 존재하지만 샤드에 해당 유저의 정보가 존재하지 않습니다');
     }
-    console.log(rows);
     setHashCache('USER_DB', 'account', player_id, rows);
     res.status(200).json(rows);
   } catch (error) {
@@ -276,7 +275,6 @@ export const countOfUsers = async (req, res) => {
   try {
     const connection = await mainDbConnections();
     const [rows] = await connection.query(SQL_QUERIES.COUNT_OF_USERS);
-    console.log(rows);
     res.status(200).json(rows[0]);
   } catch (error) {
     res.status(500).json({ errorMessage: '유저의 수를 확인하는 중 오류 발생 : ' + error });
