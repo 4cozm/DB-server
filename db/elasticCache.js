@@ -12,6 +12,7 @@ redisClient.on('connect', () => {
 redisClient.on('error', (error) => {
   console.error('Elastic cache 연결 오류 발생', error);
 });
+
 /**
  * 단일 value값을 캐싱처리할때
  * @param {*} database
@@ -21,6 +22,7 @@ redisClient.on('error', (error) => {
  */
 export const setCache = async (database, table, key, value) => {
   const redisKey = `${database}:${table}:${key}`;
+  console.log(redisKey);
   try {
     await redisClient.setEx(redisKey, 300, value);
   } catch (error) {
@@ -37,6 +39,7 @@ export const setCache = async (database, table, key, value) => {
  */
 export const getCache = async (database, table, key) => {
   const redisKey = `${database}:${table}:${key}`;
+  console.log(redisKey);
   try {
     const value = await redisClient.get(redisKey);
     if (value) {
@@ -53,6 +56,7 @@ export const getCache = async (database, table, key) => {
 
 export const setHashCache = async (database, table, key, values) => {
   const redisKey = `${database}:${table}:${key}`;
+  console.log(redisKey);
   try {
     await redisClient.hSet(redisKey, JSON.stringify(values));
   } catch (error) {
@@ -62,6 +66,7 @@ export const setHashCache = async (database, table, key, values) => {
 
 export const getHashCache = async (database, table, key) => {
   const redisKey = `${database}:${table}:${key}`;
+  console.log(redisKey);
   try {
     const value = await redisClient.hGet(redisKey);
     if (value) {
@@ -72,7 +77,7 @@ export const getHashCache = async (database, table, key) => {
       return null;
     }
   } catch (error) {
-    console.error('getCache에서 오류 발생', error);
+    console.error('getHashCache에서 오류 발생', error);
   }
 };
 
