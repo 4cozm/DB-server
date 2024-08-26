@@ -4,7 +4,7 @@ import {
   purchaseCharacter,
   updatePossession,
 } from '../controllers/gameController.js';
-
+import { sendErrorToDiscord } from '../utils/webHook.js';
 /**
  * 테스트 항목:
  * - createMatchHistory /
@@ -21,23 +21,23 @@ import {
  * - findCharacterData
  * - findCharacterInfo
  */
-const daSaveTransactionTest = async (connection) => {
+export const dbSaveTransactionTest = async (connection) => {
   try {
     await connection.beginTransaction();
     let session_id = 'testSessionId';
     let users = [
-      { playerId: 'test1', kill: 2, death: 0, damage: 132 },
-      { playerId: 'test2', kill: 0, death: 1, damage: 118 },
-      { playerId: 'test3', kill: 0, death: 1, damage: 82 },
-      { playerId: 'test4', kill: 1, death: 1, damage: 68 },
+      { playerId: 'testId', kill: 2, death: 0, damage: 132 },
+      { playerId: 'testId', kill: 0, death: 1, damage: 118 },
+      { playerId: 'testId', kill: 0, death: 1, damage: 82 },
+      { playerId: 'testId', kill: 1, death: 1, damage: 68 },
     ];
     let win_team = [
-      { playerId: 'test1', kill: 2, death: 0, damage: 132 },
-      { playerId: 'test2', kill: 0, death: 1, damage: 118 },
+      { playerId: 'testId', kill: 2, death: 0, damage: 132 },
+      { playerId: 'testId', kill: 0, death: 1, damage: 118 },
     ];
     let lose_team = [
-      { playerId: 'test3', kill: 0, death: 1, damage: 82 },
-      { playerId: 'test4', kill: 1, death: 1, damage: 68 },
+      { playerId: 'testId', kill: 0, death: 1, damage: 82 },
+      { playerId: 'testId', kill: 1, death: 1, damage: 68 },
     ];
     let win_team_color = 'green';
     let start_time = Date.now();
@@ -46,14 +46,16 @@ const daSaveTransactionTest = async (connection) => {
       body: { win_team, lose_team, users, session_id, win_team_color, start_time, map_name },
     };
     await dbSaveTransaction(req, res);
-    console.log('test성공!');
+    console.log('dbSaveTransactionTest pass');
     connection.rollback();
   } catch (e) {
-    sendTestErrorToDiscord(e.message);
+    console.error('CI/CD dbSaveTransactionTest 중 오류 발생:', e.message);
+    console.error('에러 스택:', e.stack);
+    sendErrorToDiscord(e.message);
   }
 };
 
-const findPossessionTest = async (connection) => {
+export const findPossessionTest = async (connection) => {
   try {
     await connection.beginTransaction();
     let player_id = 'testId';
@@ -61,13 +63,16 @@ const findPossessionTest = async (connection) => {
       body: { player_id },
     };
     await findPossessionByPlayerID(req, res);
+    console.log('findPossessionTest pass');
     connection.rollback();
   } catch (e) {
-    sendTestErrorToDiscord(e.message);
+    console.error('CI/CD findPossessionTest 중 오류 발생:', e.message);
+    console.error('에러 스택:', e.stack);
+    sendErrorToDiscord(e.message);
   }
 };
 
-const updatePossessionTest = async (connection) => {
+export const updatePossessionTest = async (connection) => {
   try {
     await connection.beginTransaction();
     let player_id = 'testId';
@@ -76,13 +81,16 @@ const updatePossessionTest = async (connection) => {
       body: { player_id, character_id },
     };
     await updatePossession(req, res);
+    console.log('updatePossessionTest pass');
     connection.rollback();
   } catch (e) {
-    sendTestErrorToDiscord(e.message);
+    console.error('CI/CD updatePossessionTest 중 오류 발생:', e.message);
+    console.error('에러 스택:', e.stack);
+    sendErrorToDiscord(e.message);
   }
 };
 
-const purchaseCharacterTest = async (connection) => {
+export const purchaseCharacterTest = async (connection) => {
   try {
     await connection.beginTransaction();
     let player_id = 'testId';
@@ -92,20 +100,11 @@ const purchaseCharacterTest = async (connection) => {
       body: { player_id, character_id, money },
     };
     await purchaseCharacter(req, res);
+    console.log('purchaseCharacterTest pass');
     connection.rollback();
   } catch (e) {
-    sendTestErrorToDiscord(e.message);
-  }
-};
-
-const sendTestErrorToDiscord = async (message) => {
-  const errorMessage = {
-    content: `노드 5기 여러분 제 목소리 들리시나요?~ CI/CD 게임함수 테스트 중 에러가 발생해서 급하게 알려드립니다~${message}`,
-  };
-
-  try {
-    await axios.post(webHookUrl, errorMessage);
-  } catch (error) {
-    console.log('Discord로 에러 메세지를 보내는데 실패했습니다');
+    console.error('CI/CD purchaseCharacterTest 중 오류 발생:', e.message);
+    console.error('에러 스택:', e.stack);
+    sendErrorToDiscord(e.message);
   }
 };
