@@ -1,7 +1,7 @@
 import { DbConnections, makeShardsConnect, shardConnections } from '../db/connect.js';
 import { getQueries, resetAllData } from '../utils/migration/createSchema.js';
 import { format } from 'sql-formatter';
-
+import redisClient from '../db/elasticCache.js';
 export const resetAllSchema = async (req, res) => {
   try {
     await makeShardsConnect();
