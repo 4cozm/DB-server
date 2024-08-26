@@ -252,3 +252,14 @@ export const unequipItem = async (req, res) => {
     res.status(500).json({ errorMessage: '아이템을 탈착하는 중 오류 발생 : ' + error });
   }
 };
+
+export const countOfUsers = async (req, res) => {
+  try {
+    const connection = await mainDbConnections();
+    const [rows] = await connection.query(SQL_QUERIES.COUNT_OF_USERS);
+    console.log(rows);
+    res.status(200).json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ errorMessage: '유저의 수를 확인하는 중 오류 발생 : ' + error})
+  }
+}

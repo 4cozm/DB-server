@@ -14,6 +14,7 @@ userRouter.get('/findEquippedItems', userController.findEquippedItems);
 userRouter.get('/findItemIdInInventory', userController.findItemIdInInventory);
 userRouter.patch('/equipItem', userController.equipItem);
 userRouter.patch('/unequipItem', userController.unequipItem);
+userRouter.get('/countOfUsers', userController.countOfUsers);
 
 // userRouter.patch("/purchaseEquipment", userController.purchaseEquipment);
 
