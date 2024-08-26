@@ -8,6 +8,7 @@ import { CustomError } from '../error/customError.js';
 import SQL_QUERIES from './query/userSqlQueries.js';
 import GAME_SQL_QUERIES from './query/gameSqlQueries.js';
 import { setToMainDb } from '../db/main.js';
+import { getCache, getHashCache, setCache, setHashCache } from '../db/elasticCache.js';
 
 export const findUserByPlayerId = async (req, res) => {
   try {
@@ -17,12 +18,17 @@ export const findUserByPlayerId = async (req, res) => {
         error: `필수 데이터가 누락되었습니다.`,
       });
     }
+    const cache = await getHashCache('USER_DB', 'account', player_id);
+    if (cache !== null) {
+      return res.status(200).json(JSON.parse(cache));
+    }
     const shard = await getShardByKey(player_id, 'USER_DB', 'account');
 
     const [rows] = await shard.query(SQL_QUERIES.FIND_USER_BY_PLAYER_ID, [player_id]);
     if (rows.length === 0) {
       fatalError(req, 'main DB에는 유저가 존재하지만 샤드에 해당 유저의 정보가 존재하지 않습니다');
     }
+    setHashCache('USER_DB', 'account', player_id, rows);
     res.status(200).json(rows);
   } catch (error) {
     console.error(error);
@@ -113,10 +119,14 @@ export const findMoneyByPlayerId = async (req, res) => {
     if (!player_id) {
       res.status(400).json({ errorMessage: '필수 데이터가 누락되었습니다.' });
     }
-
+    const cache = await getCache('USER_DB', 'money', player_id, money);
+    if (cache !== null) {
+      return res.status(200).json(JSON.parse(cache));
+    }
     const connection = await getShardByKey(player_id, 'USER_DB', 'money');
     const [rows] = await connection.query(SQL_QUERIES.FIND_MONEY_BY_PLAYER_ID, [player_id]);
     const money = rows.length > 0 ? toCamelCase(rows[0]) : null;
+    setCache('USER_DB', 'money', player_id, money);
     res.status(201).json(money);
   } catch (error) {
     console.error(error);
@@ -132,6 +142,7 @@ export const updateMoney = async (req, res) => {
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'money');
     const [rows] = await connection.query(SQL_QUERIES.UPDATE_MONEY, [money, player_id]);
+    await setCache('USER_DB', 'money', player_id, money);
     res.status(200).json(rows);
   } catch (error) {
     console.error(error);
@@ -191,6 +202,7 @@ export const findUserInventory = async (req, res) => {
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.FIND_USER_INVENTORY_BY_PLAYER_ID, [player_id]);
+    setHashCache('USER_DB', 'inventory', player_id, rows);
     res.status(200).json(rows);
   } catch (error) {
     res.status(500).json({ errorMessage: '유저의 인벤토리를 찾는중 오류 발생 : ' + error });
@@ -203,8 +215,13 @@ export const findEquippedItems = async (req, res) => {
     if (player_id == null) {
       res.status(400).json({ errorMessage: 'player_id 데이터가 누락되었습니다.', player_id });
     }
+    const cache = await getHashCache('USER_DB', 'inventory', player_id);
+    if (cache !== null) {
+      return res.status(200).json(cache);
+    }
     const connection = await getShardByKey(player_id, 'USER_DB', 'inventory');
     const [rows] = await connection.query(SQL_QUERIES.FIND_EQUIPPED_ITEMS_BY_PLAYER_ID, [player_id]);
+    await setHashCache('USER_DB', 'inventory', player_id, rows);
     res.status(200).json(rows);
   } catch (error) {
     res.status(500).json({ errorMessage: '유저가 장착한 아이템을 찾는중 오류 발생 :' + error });

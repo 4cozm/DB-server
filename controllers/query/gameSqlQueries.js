@@ -21,6 +21,7 @@ const GAME_SQL_QUERIES = {
   FIND_ITEM_STATS: 'SELECT * FROM item WHERE item_id = ?',
   FIND_CHARACTERS_INFO: 'SELECT * FROM `character` WHERE character_id=? ',
   UPDATE_POSSESSION: 'UPDATE possession SET character_id = ? WHERE player_id = ?',
+  ads:"SELECT COUNT(1) FROM Shards WHERE `database` = 'USER_DB' AND `table` = 'account'"
 };
 
 export default GAME_SQL_QUERIES;
