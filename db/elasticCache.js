@@ -57,9 +57,12 @@ export const setHashCache = async (database, table, key, values) => {
   try {
     if (Array.isArray(values) && values.length > 0) {
       const value = values[0];
-      await redisClient.hSet(redisKey, value);
-    } else {
-      console.error('유효하지 않은 values 객체', values);
+      const fields = {};
+      for (const [field, val] of Object.entries(value)) {
+        fields[field] = val;
+      }
+      console.log('setHashCache에 출력된 값:', fields);
+      await redisClient.hSet(redisKey, fields);
     }
   } catch (error) {
     console.error('setHashCache에서 오류 발생', error);
