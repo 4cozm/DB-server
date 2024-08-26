@@ -95,6 +95,7 @@ export const getHashCache = async (database, table, key) => {
           parsedValue[index][fieldName] = value;
         }
       }
+      console.log('Elastic cache적중', parsedValue); //테스트 로그
       return Object.values(parsedValue);
     } else {
       return null;
