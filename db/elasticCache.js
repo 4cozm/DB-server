@@ -92,7 +92,7 @@ export const getHashCache = async (database, table, key) => {
         try {
           parsedValue[index][fieldName] = JSON.parse(value);
         } catch {
-          parsedValue[index][fieldName] = value;
+          parsedValue[index][fieldName] = value; 
         }
       }
       return Object.values(parsedValue);
