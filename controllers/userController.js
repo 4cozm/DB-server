@@ -127,7 +127,7 @@ export const findMoneyByPlayerId = async (req, res) => {
     const connection = await getShardByKey(player_id, 'USER_DB', 'money');
     const [rows] = await connection.query(SQL_QUERIES.FIND_MONEY_BY_PLAYER_ID, [player_id]);
     const money = rows.length > 0 ? toCamelCase(rows[0]) : null;
-    setCache('USER_DB', 'money', player_id, money.money);
+    setCache('USER_DB', 'money', player_id, money);
     res.status(201).json(money);
   } catch (error) {
     console.error(error);
