@@ -122,7 +122,7 @@ export const findMoneyByPlayerId = async (req, res) => {
     }
     const cache = await getCache('USER_DB', 'money', player_id);
     if (cache !== null) {
-      return res.status(200).json(JSON.parse(cache));
+      return res.status(200).json(cache);
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'money');
     const [rows] = await connection.query(SQL_QUERIES.FIND_MONEY_BY_PLAYER_ID, [player_id]);
