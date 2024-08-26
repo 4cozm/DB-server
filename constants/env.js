@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -28,6 +28,8 @@ export const MAIN_PASSWORD = process.env.AWS_MAIN_PASSWORD;
 export const MAIN_HOST = process.env.AWS_MAIN_HOST;
 export const MAIN_PORT = process.env.AWS_MAIN_PORT;
 export const MAIN_NAME = process.env.AWS_MAIN_NAME;
+
+export const ELASTIC_CACHE = process.env.ELASTIC_CACHE;
 
 export const DISCORD_WEB_HOOK = process.env.DISCORD_WEB_HOOK;
 export const GITHUB_WEB_HOOK = process.env.GITHUB_WEB_HOOK;

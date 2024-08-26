@@ -5,10 +5,13 @@ const gameRouter = express.Router();
 
 // gameRouter.post("/createCharacter", gameController.createCharacter);
 gameRouter.get('/findCharacterData', gameController.findCharacterData);
+gameRouter.get('/findCharacterSkillData', gameController.findCharacterSkillData);
+gameRouter.get('/findAllItems', gameController.findAllItems);
+gameRouter.get('/findItemStats', gameController.findItemStats);
 gameRouter.get('/findCharacterInfo', gameController.findCharacterInfo);
 gameRouter.patch('/updatePossession', gameController.updatePossession);
 gameRouter.patch('/purchaseCharacter', gameController.purchaseCharacter);
 gameRouter.get('/findPossessionByPlayerID', gameController.findPossessionByPlayerID);
-gameRouter.post("/dbSaveTransaction", gameController.dbSaveTransaction);
+gameRouter.post('/dbSaveTransaction', gameController.dbSaveTransaction);
 
 export default gameRouter;
