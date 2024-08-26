@@ -22,7 +22,6 @@ redisClient.on('error', (error) => {
  */
 export const setCache = async (database, table, key, value) => {
   const redisKey = `${database}:${table}:${key}`;
-  console.log(redisKey);
   try {
     await redisClient.setEx(redisKey, 300, value);
   } catch (error) {
@@ -39,14 +38,13 @@ export const setCache = async (database, table, key, value) => {
  */
 export const getCache = async (database, table, key) => {
   const redisKey = `${database}:${table}:${key}`;
-  console.log(redisKey);
   try {
     const value = await redisClient.get(redisKey);
     if (value) {
       console.log('Elastic cache적중', redisKey); //테스트 로그
       return value;
     } else {
-      console.log('Elastic cache에서 값 찾지 못함'); //테스트 로그
+      console.log(redisKey, 'Elastic cache에서 값 찾지 못함'); //테스트 로그
       return null;
     }
   } catch (error) {
@@ -56,9 +54,13 @@ export const getCache = async (database, table, key) => {
 
 export const setHashCache = async (database, table, key, values) => {
   const redisKey = `${database}:${table}:${key}`;
-  console.log(redisKey);
   try {
-    await redisClient.hSet(redisKey, values);
+    if (Array.isArray(values) && values.length > 0) {
+      const value = values[0];
+      await redisClient.hSet(redisKey, value);
+    } else {
+      console.error('유효하지 않은 values 객체', values);
+    }
   } catch (error) {
     console.error('setHashCache에서 오류 발생', error);
   }
@@ -73,14 +75,13 @@ export const setHashCache = async (database, table, key, values) => {
  */
 export const getHashCache = async (database, table, key) => {
   const redisKey = `${database}:${table}:${key}`;
-  console.log(redisKey);
   try {
     const value = await redisClient.hGetAll(redisKey);
     if (Object.keys(value).length > 0) {
       console.log('Elastic cache적중', redisKey); //테스트 로그
       return value;
     } else {
-      console.log('Elastic cache에서 값 찾지 못함'); //테스트 로그
+      console.log(redisKey, 'Elastic cache에서 값 찾지 못함'); //테스트 로그
       return null;
     }
   } catch (error) {
