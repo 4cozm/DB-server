@@ -20,7 +20,7 @@ export const findUserByPlayerId = async (req, res) => {
     }
     const cache = await getHashCache('USER_DB', 'account', player_id);
     if (cache !== null) {
-      return res.status(200).json(JSON.parse(cache));
+      return res.status(200).json(cache);
     }
     const shard = await getShardByKey(player_id, 'USER_DB', 'account');
 
