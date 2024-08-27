@@ -4,6 +4,7 @@ import formatDate from '../utils/dateFormatter.js';
 import { DbConnections } from '../db/connect.js';
 import GAME_SQL_QUERIES from './query/gameSqlQueries.js';
 import SQL_QUERIES from './query/userSqlQueries.js';
+import { deleteHashCache } from '../db/elasticCache.js';
 
 export const dbSaveTransaction = async (req, res) => {
   const { win_team, lose_team, users, session_id, win_team_color, start_time, map_name } = req.body;
@@ -302,6 +303,7 @@ export const purchaseCharacter = async (req, res) => {
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
+    await deleteHashCache('USER_DB', 'money', player_id);
 
     await gameConnection.commit();
     await userConnection.commit();

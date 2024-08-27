@@ -142,7 +142,7 @@ export const updateMoney = async (req, res) => {
     }
     const connection = await getShardByKey(player_id, 'USER_DB', 'money');
     const [rows] = await connection.query(SQL_QUERIES.UPDATE_MONEY, [money, player_id]);
-    await setCache('USER_DB', 'money', player_id, money);
+    await deleteHashCache('USER_DB', 'money', player_id);
     res.status(200).json(rows);
   } catch (error) {
     console.error(error);
@@ -182,7 +182,6 @@ export const purchaseEquipment = async (req, res) => {
     if (rows.affectedRows === 0) {
       return res.status(404).json({ errorMessage: `변경 사항이 반영되지 않았습니다. 영향을 받은 행이 없습니다` });
     }
-
     await userMoneyConnection.commit();
     await userInventoryConnection.commit();
     await deleteHashCache('USER_DB', 'inventory', player_id);
