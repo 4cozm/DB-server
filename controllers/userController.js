@@ -184,6 +184,7 @@ export const purchaseEquipment = async (req, res) => {
     }
     await userMoneyConnection.commit();
     await userInventoryConnection.commit();
+    await deleteHashCache('USER_DB', 'money', player_id);
     await deleteHashCache('USER_DB', 'inventory', player_id);
     res.status(200).json({ player_id, item_id, equip_slot, money });
   } catch (error) {
